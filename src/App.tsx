@@ -15,7 +15,7 @@ const theme = extendTheme({
 
 const LogoIcon = () => (
   <Image
-    src="/neon-geometric.webp"
+    src="neon-geometric.webp"
     alt="Geometric Logo"
     width="40px"
     height="40px"
@@ -169,7 +169,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "About Me",
-          path: "/Content/Intro/About-me.md"
+          path: "Content/Intro/About-me.md"
         }
       ]
     },
@@ -178,7 +178,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "Sample",
-          path: "/Content/Code Pieces/sample.md"
+          path: "Content/Code Pieces/sample.md"
         }
       ]
     },
@@ -187,7 +187,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "Research Methodology",
-          path: "/Content/Vulnerability Research/deneme.md"
+          path: "Content/Vulnerability Research/deneme.md"
         }
       ]
     }
@@ -272,20 +272,22 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
 
 const ContentViewer = ({ filePath }: { filePath: string }) => {
   const [content, setContent] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        // Fetch directly from the public directory
+        setError(null);
         const response = await fetch(filePath);
         if (!response.ok) {
-          throw new Error('Failed to fetch content');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         const text = await response.text();
         setContent(text);
       } catch (error) {
         console.error('Error fetching file content:', error);
-        setContent('# Error\nFailed to load content. Please try again later.');
+        setError('Failed to load content. Please try again later.');
+        setContent('');
       }
     };
 
@@ -293,6 +295,23 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
       fetchContent();
     }
   }, [filePath]);
+
+  if (error) {
+    return (
+      <Box 
+        bg="rgba(4, 11, 20, 0.7)"
+        backdropFilter="blur(10px)"
+        borderRadius="0"
+        p={6}
+        border="1px solid rgba(255, 0, 0, 0.3)"
+      >
+        <Text color="red.300">{error}</Text>
+        <Text color="whiteAlpha.700" mt={2} fontSize="sm">
+          Path attempted: {filePath}
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <Box 
@@ -310,7 +329,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
 };
 
 const App: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<string>('/Content/Intro/About-me.md');
+  const [selectedFile, setSelectedFile] = useState<string>('Content/Intro/About-me.md');
 
   const handleFileSelect = (path: string) => {
     setSelectedFile(path);
