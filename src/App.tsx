@@ -9,6 +9,54 @@ const theme = extendTheme({
         bg: '#040B14',
         color: 'white',
       },
+      '.markdown-content': {
+        h1: {
+          fontSize: '2xl',
+          fontWeight: 'bold',
+          mb: 4,
+          color: 'white',
+        },
+        h2: {
+          fontSize: 'xl',
+          fontWeight: 'bold',
+          mb: 3,
+          mt: 6,
+          color: 'white',
+        },
+        h3: {
+          fontSize: 'lg',
+          fontWeight: 'bold',
+          mb: 2,
+          mt: 4,
+          color: 'white',
+        },
+        p: {
+          mb: 4,
+          lineHeight: 'tall',
+        },
+        ul: {
+          ml: 4,
+          mb: 4,
+        },
+        li: {
+          mb: 1,
+        },
+        code: {
+          bg: 'rgba(0, 0, 0, 0.3)',
+          p: 1,
+          borderRadius: 'sm',
+          fontFamily: 'mono',
+        },
+        'pre code': {
+          display: 'block',
+          overflow: 'auto',
+          p: 4,
+          bg: 'rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(22, 101, 216, 0.3)',
+          borderRadius: '0',
+          color: 'whiteAlpha.900',
+        }
+      }
     },
   },
 })
@@ -309,7 +357,18 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
         backdropFilter="blur(10px)"
         borderRadius="0"
         p={6}
-        border="1px solid rgba(255, 0, 0, 0.3)"
+        position="relative"
+        _before={{
+          content: '""',
+          position: 'absolute',
+          inset: '-1px',
+          padding: '1px',
+          background: 'linear-gradient(45deg, rgba(255, 0, 0, 0.8), rgba(255, 0, 0, 0.4))',
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
+          boxShadow: '0 0 10px rgba(255, 0, 0, 0.5), 0 0 20px rgba(255, 0, 0, 0.3), inset 0 0 10px rgba(255, 0, 0, 0.3)',
+        }}
       >
         <Text color="red.300">{error}</Text>
         <Text color="whiteAlpha.700" mt={2} fontSize="sm">
@@ -325,9 +384,75 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
       backdropFilter="blur(10px)"
       borderRadius="0"
       p={6}
-      border="1px solid rgba(22, 101, 216, 0.2)"
+      position="relative"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        inset: '-1px',
+        padding: '1px',
+        background: 'linear-gradient(45deg, rgba(22, 101, 216, 0.8), rgba(22, 101, 216, 0.4))',
+        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+        WebkitMaskComposite: 'xor',
+        maskComposite: 'exclude',
+        boxShadow: '0 0 10px rgba(22, 101, 216, 0.5), 0 0 20px rgba(22, 101, 216, 0.3), inset 0 0 10px rgba(22, 101, 216, 0.3)',
+      }}
     >
-      <Box className="markdown-content" color="white">
+      <Box className="markdown-content" sx={{
+        'pre': {
+          bg: 'transparent',
+          p: 0,
+        },
+        'pre > code': {
+          display: 'block',
+          overflow: 'auto',
+          p: 4,
+          bg: 'rgba(0, 0, 0, 0.5)',
+          borderRadius: '0',
+          color: 'whiteAlpha.900',
+          position: 'relative',
+          _before: {
+            content: '""',
+            position: 'absolute',
+            inset: '-1px',
+            padding: '1px',
+            background: 'linear-gradient(45deg, rgba(22, 101, 216, 0.6), rgba(22, 101, 216, 0.3))',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            boxShadow: '0 0 10px rgba(22, 101, 216, 0.4), 0 0 20px rgba(22, 101, 216, 0.2), inset 0 0 10px rgba(22, 101, 216, 0.2)',
+          }
+        },
+        'p code': {
+          bg: 'rgba(0, 0, 0, 0.3)',
+          p: 1,
+          borderRadius: 'sm',
+          fontFamily: 'mono',
+        },
+        'ul': {
+          listStyleType: 'disc',
+          pl: 6,
+          mb: 4,
+        },
+        'ol': {
+          listStyleType: 'decimal',
+          pl: 6,
+          mb: 4,
+        },
+        'li': {
+          mb: 2,
+        },
+        'p': {
+          mb: 4,
+          lineHeight: 'tall',
+        },
+        'h1, h2, h3, h4, h5, h6': {
+          color: 'white',
+          fontWeight: 'bold',
+        },
+        'h1': { fontSize: '2xl', mb: 6, mt: 4 },
+        'h2': { fontSize: 'xl', mb: 4, mt: 6 },
+        'h3': { fontSize: 'lg', mb: 3, mt: 4 },
+      }}>
         <ReactMarkdown>{content}</ReactMarkdown>
       </Box>
     </Box>
