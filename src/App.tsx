@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, ChakraProvider, Container, Heading, Text, Button, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
+import { Box, ChakraProvider, Container, Text, Button, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
 import ReactMarkdown from 'react-markdown'
 
 const theme = extendTheme({
