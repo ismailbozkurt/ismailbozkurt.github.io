@@ -162,6 +162,12 @@ interface Section {
   items: ContentItem[];
 }
 
+const getGitHubRawUrl = (path: string) => {
+  // Remove leading slash if present
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/main/${cleanPath}`;
+};
+
 const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => {
   const sections: Section[] = [
     {
@@ -278,7 +284,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
     const fetchContent = async () => {
       try {
         setError(null);
-        const response = await fetch(filePath);
+        const response = await fetch(getGitHubRawUrl(filePath));
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
