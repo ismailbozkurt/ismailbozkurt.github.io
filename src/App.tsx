@@ -156,11 +156,6 @@ interface ContentItem {
   path: string;
 }
 
-interface ContentSection {
-  title: string;
-  items: ContentItem[];
-}
-
 const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => {
   const sections = [
     {
