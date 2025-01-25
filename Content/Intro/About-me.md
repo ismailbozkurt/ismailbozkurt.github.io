@@ -2,7 +2,7 @@
 
 # 💫 About Me
 
-A battle-tested offensive security specialist and vulnerability researcher with a track record of breaking, building, and securing critical systems. Architecting next-gen security solutions and hunting zero-days that others miss.
+Offensive security specialist and vulnerability researcher with a track record of breaking, building, and securing critical systems. Architecting next-gen security solutions and hunting zero-days that others miss.
 
 ## 🛡️ Professional Arsenal
 
