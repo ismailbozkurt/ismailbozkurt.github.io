@@ -329,8 +329,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
 };
 
 const ContentViewer = ({ filePath }: { filePath: string }) => {
-  const [beforeContent, setBeforeContent] = useState<string>('')
-  const [afterContent, setAfterContent] = useState<string>('')
+  const [content, setContent] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -344,10 +343,6 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
         }
         const text = await response.text()
         
-        // Split content at the certifications section and technical arsenal section
-        const [beforeCert, rest] = text.split('## 🏆 Arsenal Certifications')
-        const [_, afterTechnical] = rest.split('## 🛠️ Technical Arsenal')
-        
         const processContent = async (text: string) => {
           if (!text) return ''
           const processed = await unified()
@@ -358,18 +353,28 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
             .process(text)
           return String(processed)
         }
+
+        // Check if this is the About-me.md file
+        if (filePath === 'Content/Intro/About-me.md') {
+          // Split content for About-me.md
+          const [beforeCert, rest] = text.split('## 🏆 Arsenal Certifications')
+          const [_, afterTechnical] = rest.split('## 🛠️ Technical Arsenal')
+          
+          const beforeHtml = await processContent(beforeCert)
+          const afterHtml = await processContent('## 🛠️ Technical Arsenal' + afterTechnical)
+          
+          setContent(`${beforeHtml}<h2>🏆 Arsenal Certifications</h2><div id="cert-placeholder"></div>${afterHtml}`)
+        } else {
+          // For other markdown files, process the entire content
+          const processedContent = await processContent(text)
+          setContent(processedContent)
+        }
         
-        const beforeHtml = await processContent(beforeCert)
-        const afterHtml = await processContent('## 🛠️ Technical Arsenal' + afterTechnical)
-        
-        setBeforeContent(beforeHtml)
-        setAfterContent(afterHtml)
         setError(null)
       } catch (err) {
         console.error('Error fetching content:', err)
         setError('Failed to load content')
-        setBeforeContent('')
-        setAfterContent('')
+        setContent('')
       }
     }
 
@@ -386,6 +391,25 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
     )
   }
 
+  // If this is About-me.md, insert the Certifications component
+  if (filePath === 'Content/Intro/About-me.md') {
+    const [before, after] = content.split('<div id="cert-placeholder"></div>')
+    return (
+      <Box 
+        className="markdown-content"
+        p={6} 
+        bg="rgba(0, 0, 0, 0.3)"
+        borderRadius="lg"
+        backdropFilter="blur(12px)"
+      >
+        <Box dangerouslySetInnerHTML={{ __html: before }} />
+        <Certifications />
+        <Box dangerouslySetInnerHTML={{ __html: after }} />
+      </Box>
+    )
+  }
+
+  // For other files, render the content directly
   return (
     <Box 
       className="markdown-content"
@@ -393,12 +417,8 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
       bg="rgba(0, 0, 0, 0.3)"
       borderRadius="lg"
       backdropFilter="blur(12px)"
-    >
-      <Box dangerouslySetInnerHTML={{ __html: beforeContent }} />
-      <h2>🏆 Arsenal Certifications</h2>
-      <Certifications />
-      <Box dangerouslySetInnerHTML={{ __html: afterContent }} />
-    </Box>
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
   )
 }
 
