@@ -1,0 +1,159 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #040B14;
+  color: white;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+a {
+  text-decoration: none;
+}
+
+h1 {
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* Circuit Pattern Animations */
+@keyframes glowPulse {
+  0% {
+    opacity: 0.35;
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 1px rgba(22, 101, 216, 0.4));
+  }
+  50% {
+    opacity: 0.55;
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 2px rgba(22, 101, 216, 0.6));
+  }
+  100% {
+    opacity: 0.35;
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 1px rgba(22, 101, 216, 0.4));
+  }
+}
+
+@keyframes dotPulse {
+  0% {
+    opacity: 0.5;
+    r: 2;
+    filter: drop-shadow(0 0 1px rgba(22, 101, 216, 0.5));
+  }
+  50% {
+    opacity: 0.8;
+    r: 2.5;
+    filter: drop-shadow(0 0 2px rgba(22, 101, 216, 0.7));
+  }
+  100% {
+    opacity: 0.5;
+    r: 2;
+    filter: drop-shadow(0 0 1px rgba(22, 101, 216, 0.5));
+  }
+}
+
+/* Apply animations to SVG elements */
+svg path {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+svg circle {
+  animation: dotPulse 3s ease-in-out infinite;
+}
+
+/* Stagger animations for different paths */
+svg path:nth-child(2) {
+  animation-delay: -1s;
+}
+svg path:nth-child(3) {
+  animation-delay: -2s;
+}
+svg path:nth-child(4) {
+  animation-delay: -3s;
+}
+
+/* Stagger animations for dots */
+svg circle:nth-child(odd) {
+  animation-delay: -1.5s;
+}
+svg circle:nth-child(3n) {
+  animation-delay: -0.7s;
+}
+svg circle:nth-child(4n) {
+  animation-delay: -2.3s;
+}
+
+/* Circuit Border Animation */
+@keyframes borderFlow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+.circuit-border {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  pointer-events: none;
+  border: 1px solid rgba(22, 101, 216, 0.2);
+  border-radius: 12px;
+  background-image: 
+    linear-gradient(45deg, rgba(22, 101, 216, 0.1) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(22, 101, 216, 0.1) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(22, 101, 216, 0.1) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(22, 101, 216, 0.1) 75%);
+  background-size: 20px 20px;
+  animation: borderFlow 20s linear infinite;
+}
