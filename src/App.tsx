@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Box, ChakraProvider, Container, Text, Button, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
 import ReactMarkdown from 'react-markdown'
+import { siteContent } from './config/content'
 
 const theme = extendTheme({
   styles: {
@@ -162,33 +163,35 @@ interface ContentSection {
 }
 
 const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => {
-  const [sections, setSections] = useState<ContentSection[]>([]);
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      try {
-        const response = await fetch('/api/content');
-        if (!response.ok) {
-          throw new Error('Failed to fetch content');
+  const sections = [
+    {
+      title: "INTRO",
+      items: [
+        {
+          name: "About Me",
+          path: "/Content/Intro/About-me.md"
         }
-        const data = await response.json();
-        console.log('Fetched content:', data);
-        
-        // Sort sections to ensure INTRO is always first
-        const sortedSections = data.sort((a: ContentSection, b: ContentSection) => {
-          if (a.title === 'INTRO') return -1;
-          if (b.title === 'INTRO') return 1;
-          return a.title.localeCompare(b.title);
-        });
-        
-        setSections(sortedSections);
-      } catch (error) {
-        console.error('Error fetching content:', error);
-      }
-    };
-
-    fetchContent();
-  }, []);
+      ]
+    },
+    {
+      title: "CODE PIECES",
+      items: [
+        {
+          name: "Sample",
+          path: "/Content/Code Pieces/sample.md"
+        }
+      ]
+    },
+    {
+      title: "VULNERABILITY RESEARCH",
+      items: [
+        {
+          name: "Research Methodology",
+          path: "/Content/Vulnerability Research/deneme.md"
+        }
+      ]
+    }
+  ];
 
   return (
     <Box
@@ -273,7 +276,8 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`);
+        // Fetch directly from the public directory
+        const response = await fetch(filePath);
         if (!response.ok) {
           throw new Error('Failed to fetch content');
         }
@@ -281,6 +285,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
         setContent(text);
       } catch (error) {
         console.error('Error fetching file content:', error);
+        setContent('# Error\nFailed to load content. Please try again later.');
       }
     };
 

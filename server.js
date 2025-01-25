@@ -20,46 +20,51 @@ app.use((req, res, next) => {
 // Serve static files from the dist directory
 app.use(express.static('dist'));
 
-// API endpoint to get content
+// API endpoint to get content structure
 app.get('/api/content', async (req, res) => {
-  const contentDir = path.join(__dirname, 'Content');
-  const sections = [];
-
   try {
+    const contentDir = path.join(__dirname, 'Content');
+    const sections = [];
+    
+    // Read all directories in Content folder
     const dirs = await fs.readdir(contentDir);
-    console.log('Found directories:', dirs);
     
     for (const dir of dirs) {
       const dirPath = path.join(contentDir, dir);
       const stat = await fs.stat(dirPath);
       
       if (stat.isDirectory()) {
+        // Read all files in the directory
         const files = await fs.readdir(dirPath);
-        console.log(`Files in ${dir}:`, files);
+        const items = [];
         
-        const items = await Promise.all(
-          files.map(async (file) => {
-            const filePath = path.join(dirPath, file);
-            const relativePath = path.relative(__dirname, filePath);
-            return {
-              name: path.parse(file).name,
-              path: '/' + relativePath.replace(/\\/g, '/'),
-            };
-          })
-        );
-
-        sections.push({
-          title: dir.toUpperCase(),
-          items,
-        });
+        for (const file of files) {
+          if (file.endsWith('.md')) {
+            const name = path.basename(file, '.md')
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+              
+            items.push({
+              name,
+              path: `/Content/${dir}/${file}`
+            });
+          }
+        }
+        
+        if (items.length > 0) {
+          sections.push({
+            title: dir.toUpperCase(),
+            items
+          });
+        }
       }
     }
-
-    console.log('Sending sections:', sections);
+    
     res.json(sections);
   } catch (error) {
-    console.error('Error reading content:', error);
-    res.status(500).json({ error: 'Failed to read content', details: error.message });
+    console.error('Error reading content structure:', error);
+    res.status(500).json({ error: 'Failed to read content structure' });
   }
 });
 
@@ -67,19 +72,21 @@ app.get('/api/content', async (req, res) => {
 app.get('/api/file', async (req, res) => {
   try {
     const filePath = path.join(__dirname, req.query.path);
-    
-    // Security check to ensure the file is within the Content directory
     const contentDir = path.join(__dirname, 'Content');
     if (!filePath.startsWith(contentDir)) {
       return res.status(403).json({ error: 'Access denied' });
     }
-
     const content = await fs.readFile(filePath, 'utf-8');
     res.type('text/plain').send(content);
   } catch (error) {
     console.error('Error reading file:', error);
     res.status(500).json({ error: 'Failed to read file', details: error.message });
   }
+});
+
+// Handle all other routes by serving index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(port, () => {
