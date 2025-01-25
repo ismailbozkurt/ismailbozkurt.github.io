@@ -197,10 +197,11 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       top={0}
       bottom={0}
       w="280px"
-      bg="rgba(4, 11, 20, 0.25)"
-      borderRight="1px solid rgba(22, 101, 216, 0.15)"
-      backdropFilter="blur(4px)"
+      bg="rgba(4, 11, 20, 0.85)"
+      borderRight="1px solid rgba(22, 101, 216, 0.3)"
+      backdropFilter="blur(16px)"
       overflowY="auto"
+      zIndex={5}
       css={{
         '&::-webkit-scrollbar': {
           width: '4px',
