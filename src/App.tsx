@@ -5,7 +5,6 @@ import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
-import rehypeSanitize from 'rehype-sanitize'
 import { config } from './config/env'
 import { Certifications } from './components/Certifications'
 

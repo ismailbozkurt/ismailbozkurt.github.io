@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Image, HStack, Text } from '@chakra-ui/react';
 
 const certifications = [
