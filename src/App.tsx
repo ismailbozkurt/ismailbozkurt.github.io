@@ -304,7 +304,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
 };
 
 const App: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<string>('/Content/Intro/About-me.md');
 
   const handleFileSelect = (path: string) => {
     setSelectedFile(path);
@@ -325,35 +325,7 @@ const App: React.FC = () => {
         {/* Content - Adjust margin to account for sidebar */}
         <Box ml="280px">
           <Container maxW="container.lg" py={32} position="relative" zIndex={2}>
-            {selectedFile ? (
-              <ContentViewer filePath={selectedFile} />
-            ) : (
-              <>
-                <Heading
-                  as="h1"
-                  size="2xl"
-                  textAlign="center"
-                  mb={4}
-                  color="white"
-                  letterSpacing="tight"
-                >
-                  Ready to Stay Ahead of{' '}
-                  <Text as="span" color="#FF6B2C" display="block">
-                    Cyber Threats
-                  </Text>
-                </Heading>
-                
-                <Text
-                  textAlign="center"
-                  fontSize="lg"
-                  mb={8}
-                  color="whiteAlpha.800"
-                >
-                  Join <Text as="span" color="#FF6B2C" fontWeight="bold">CATALYST</Text> Today and Maximize Your<br />
-                  Cybersecurity Strategy.
-                </Text>
-              </>
-            )}
+            <ContentViewer filePath={selectedFile} />
           </Container>
         </Box>
       </Box>

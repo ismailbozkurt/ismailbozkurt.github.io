@@ -9,7 +9,12 @@ export default defineConfig({
       plugins: ['@emotion/babel-plugin']
     }
   })],
-  base: '/',  // Root path for username.github.io
+  base: '',  // Empty string for root domain GitHub Pages
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true
+  },
   server: {
     host: true,
     port: 5173,
