@@ -15,7 +15,7 @@ const theme = extendTheme({
 
 const LogoIcon = () => (
   <Image
-    src="neon-geometric.webp"
+    src="/neon-geometric.webp"
     alt="Geometric Logo"
     width="40px"
     height="40px"
@@ -169,7 +169,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "About Me",
-          path: "Content/Intro/About-me.md"
+          path: "/Content/Intro/About-me.md"
         }
       ]
     },
@@ -178,7 +178,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "Sample",
-          path: "Content/Code Pieces/sample.md"
+          path: "/Content/Code Pieces/sample.md"
         }
       ]
     },
@@ -187,7 +187,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "Research Methodology",
-          path: "Content/Vulnerability Research/deneme.md"
+          path: "/Content/Vulnerability Research/deneme.md"
         }
       ]
     }
@@ -310,7 +310,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
 };
 
 const App: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<string>('Content/Intro/About-me.md');
+  const [selectedFile, setSelectedFile] = useState<string>('/Content/Intro/About-me.md');
 
   const handleFileSelect = (path: string) => {
     setSelectedFile(path);
