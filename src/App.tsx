@@ -131,7 +131,13 @@ const Header = () => (
 )
 
 const CircuitBackground = () => (
-  <Box position="absolute" inset={0} pointerEvents="none" overflow="hidden">
+  <Box 
+    position="fixed" 
+    inset={0} 
+    pointerEvents="none" 
+    overflow="hidden"
+    zIndex={1}
+  >
     <svg width="100%" height="100%" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
       {/* Left Side Main Circuit */}
       <path
@@ -468,10 +474,10 @@ const App: React.FC = () => {
 
   return (
     <ChakraProvider theme={theme}>
+      {/* Circuit Background - Moved outside the main Box */}
+      <CircuitBackground />
+      
       <Box position="relative" minH="100vh" overflow="hidden" bg="#040B14">
-        {/* Circuit Background */}
-        <CircuitBackground />
-        
         {/* Header */}
         <Header />
 
