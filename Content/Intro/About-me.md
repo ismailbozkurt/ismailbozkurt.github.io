@@ -1,4 +1,4 @@
-# Hi <img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" width="28">, I'm İsmail BOZKURT
+# Hi, I'm İsmail BOZKURT
 
 # 💫 About Me
 
@@ -6,7 +6,7 @@ A battle-tested offensive security specialist and vulnerability researcher with 
 
 ## 🛡️ Professional Arsenal
 
-### // Freelancer
+### // Founder @ Securix IT Trade Limited Company
 
 `Nov 2023 - Present | Istanbul, Turkey (Remote)`
 
@@ -20,44 +20,42 @@ A battle-tested offensive security specialist and vulnerability researcher with 
 
 - 🔥 Led full-scope red team operations against high-value targets
 - 🌐 Conducted stealth-focused API/webapp pentesting with custom exploitation chains
-- 🛠️ Tools: `Cobalt Strike` | `Penetration Testing` | `Red Team` | `Vulnerability Research` | `Source Code Analysis` | `Reverse Engineering` | `Malware Analysis` | `Network Infrastructure` | `Exploit Development` | `Security Automation` | `Custom Security Tools`
+- 🛠️ Tools: `Cobalt Strike` | `custom C2 frameworks` | `zero-day exploits`
 
 ## 🏆 Arsenal Certifications
 
-<div align="center">
-<img src="https://templates.images.credential.net/16776823122090017879526713130770.png" width="150" style="display: inline-block; margin: 0 10px;" alt="OSWP Badge" /> <img src="https://templates.images.credential.net/16776822423126238551944601227169.png" width="150" style="display: inline-block; margin: 0 10px;" alt="OSCE Badge" /> <img src="https://templates.images.credential.net/1677682410975725023965573912354.png" width="150" style="display: inline-block; margin: 0 10px;" alt="OSCP Badge" />
-</div>
+| ![OSWP](https://templates.images.credential.net/16776823122090017879526713130770.png) | ![OSCE](https://templates.images.credential.net/16776822423126238551944601227169.png) | ![OSCP](https://templates.images.credential.net/1677682410975725023965573912354.png) |
+| :-----------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |
 
-```plaintext
-[✓] Certified AppSec Practitioner (CAP) - The SecOps Group [2023]
-[✓] Offensive Security Wireless Professional (OSWP) - OffSec [2020]
-[✓] Offensive Security Certified Expert (OSCE) - OffSec [2020]
-[✓] Offensive Security Certified Professional (OSCP) - OffSec [2020]
-```
+- ✓ Certified AppSec Practitioner (CAP) - The SecOps Group [2023]
+- ✓ Offensive Security Wireless Professional (OSWP) - OffSec [2020]
+- ✓ Offensive Security Certified Expert (OSCE) - OffSec [2020]
+- ✓ Offensive Security Certified Professional (OSCP) - OffSec [2020]
 
 ## 💻 Technical Arsenal
 
-### 🔥 Offensive Security:
+### 🔥 Offensive Security
 
-```plaintext
-⚡ Advanced Penetration Testing   ⚡ Custom Exploit Development
-⚡ Web/Mobile App Security       ⚡ Advanced Persistence Techniques
-⚡ Network Infrastructure        ⚡ Reverse Engineering (x86/x64/ARM)
-```
+- ⚡ Advanced Penetration Testing
+- ⚡ Custom Exploit Development
+- ⚡ Web/Mobile App Security
+- ⚡ Advanced Persistence Techniques
+- ⚡ Network Infrastructure
+- ⚡ Reverse Engineering (x86/x64/ARM)
 
-### 🦠 Malware Analysis:
+### 🦠 Malware Analysis
 
-```plaintext
-⚡ Dynamic/Static Analysis       ⚡ Anti-VM Detection Bypass
-⚡ Custom Sandbox Development    ⚡ IOC Extraction & Hunting
-```
+- ⚡ Dynamic/Static Analysis
+- ⚡ Anti-VM Detection Bypass
+- ⚡ Custom Sandbox Development
+- ⚡ IOC Extraction & Hunting
 
-### 🛠️ Development:
+### 🛠️ Development
 
-```plaintext
-⚡ Python/C/ASM                 ⚡ Security Automation
-⚡ Custom Security Tools        ⚡ Red Team C2 Infrastructure
-```
+- ⚡ Python/C/ASM
+- ⚡ Security Automation
+- ⚡ Custom Security Tools
+- ⚡ Red Team C2 Infrastructure
 
 ## 🚀 Research Operations
 
@@ -85,21 +83,16 @@ A battle-tested offensive security specialist and vulnerability researcher with 
 - 🔗 Platform: www.cyberfestist.com
 - 🎯 Focus: Zero-day Research Methodology
 
-## 🗣️ Communication Protocols
+## Languages
 
-```plaintext
-[TR] Turkish  ███████████ Native
-[EN] English  ████████░░░ Professional
-```
+- Turkish (Native)
+- English (Professional)
+- German (Basic)
 
 ---
 
-<p align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=ismailbozkurt&show_icons=true&theme=radical" alt="GitHub Stats" />
-</p>
+![GitHub Stats](https://github-readme-stats.vercel.app/api?username=ismailbozkurt&show_icons=true&theme=radical)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Red%20Teaming-Expert-red" />
-  <img src="https://img.shields.io/badge/Malware%20Analysis-Advanced-blue" />
-  <img src="https://img.shields.io/badge/Exploit%20Dev-Expert-purple" />
-</p>
+![Red Teaming](https://img.shields.io/badge/Red%20Teaming-Expert-red)
+![Malware Analysis](https://img.shields.io/badge/Malware%20Analysis-Advanced-blue)
+![Exploit Dev](https://img.shields.io/badge/Exploit%20Dev-Expert-purple)

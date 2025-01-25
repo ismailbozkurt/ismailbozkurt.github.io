@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { Box, ChakraProvider, Container, Text, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
-import ReactMarkdown from 'react-markdown'
+import { Box, ChakraProvider, Container, Text, Button, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
+import { remark } from 'remark'
+import html from 'remark-html'
 
 const theme = extendTheme({
   styles: {
@@ -331,23 +332,32 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
 };
 
 const ContentViewer = ({ filePath }: { filePath: string }) => {
-  const [content, setContent] = useState<string>('');
+  const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        setError(null);
-        const response = await fetch(getGitHubRawUrl(filePath));
+        // Convert the local path to GitHub raw URL
+        const githubRawUrl = `https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/main/${filePath}`;
+        console.log('Fetching from:', githubRawUrl); // Debug log
+        const response = await fetch(githubRawUrl);
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`Failed to load content: ${response.statusText}`);
         }
         const text = await response.text();
-        setContent(text);
-      } catch (error) {
-        console.error('Error fetching file content:', error);
-        setError('Failed to load content. Please try again later.');
-        setContent('');
+        console.log('Fetched content:', text); // Debug log
+        
+        // Process markdown content
+        const processedContent = await remark()
+          .use(html, { sanitize: false }) // Disable sanitization to allow img tags with styles
+          .process(text);
+          
+        setContent(processedContent.toString());
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching content:', err);
+        setError('Failed to load content');
       }
     };
 
@@ -358,109 +368,38 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
 
   if (error) {
     return (
-      <Box 
-        bg="rgba(4, 11, 20, 0.7)"
-        backdropFilter="blur(10px)"
-        borderRadius="0"
-        p={6}
-        position="relative"
-        _before={{
-          content: '""',
-          position: 'absolute',
-          inset: '-1px',
-          padding: '1px',
-          background: 'linear-gradient(45deg, rgba(255, 0, 0, 0.8), rgba(255, 0, 0, 0.4))',
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'xor',
-          maskComposite: 'exclude',
-          boxShadow: '0 0 10px rgba(255, 0, 0, 0.5), 0 0 20px rgba(255, 0, 0, 0.3), inset 0 0 10px rgba(255, 0, 0, 0.3)',
-        }}
-      >
-        <Text color="red.300">{error}</Text>
-        <Text color="whiteAlpha.700" mt={2} fontSize="sm">
-          Path attempted: {filePath}
-        </Text>
+      <Box p={4} color="red.500">
+        {error}
       </Box>
     );
   }
 
   return (
     <Box 
-      bg="rgba(4, 11, 20, 0.7)"
-      backdropFilter="blur(10px)"
-      borderRadius="0"
-      p={6}
+      p={6} 
+      bg="rgba(4, 11, 20, 0.25)"
+      backdropFilter="blur(16px)"
+      borderRadius="md"
+      border="1px solid rgba(22, 101, 216, 0.15)"
       position="relative"
       _before={{
         content: '""',
         position: 'absolute',
-        inset: '-1px',
-        padding: '1px',
-        background: 'linear-gradient(45deg, rgba(22, 101, 216, 0.8), rgba(22, 101, 216, 0.4))',
-        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-        WebkitMaskComposite: 'xor',
-        maskComposite: 'exclude',
-        boxShadow: '0 0 10px rgba(22, 101, 216, 0.5), 0 0 20px rgba(22, 101, 216, 0.3), inset 0 0 10px rgba(22, 101, 216, 0.3)',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: 'md',
+        border: '1px solid',
+        borderColor: 'rgba(22, 101, 216, 0.4)',
+        opacity: 0.5,
+        pointerEvents: 'none'
       }}
     >
-      <Box className="markdown-content" sx={{
-        'pre': {
-          bg: 'transparent',
-          p: 0,
-        },
-        'pre > code': {
-          display: 'block',
-          overflow: 'auto',
-          p: 4,
-          bg: 'rgba(0, 0, 0, 0.5)',
-          borderRadius: '0',
-          color: 'whiteAlpha.900',
-          position: 'relative',
-          _before: {
-            content: '""',
-            position: 'absolute',
-            inset: '-1px',
-            padding: '1px',
-            background: 'linear-gradient(45deg, rgba(22, 101, 216, 0.6), rgba(22, 101, 216, 0.3))',
-            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-            WebkitMaskComposite: 'xor',
-            maskComposite: 'exclude',
-            boxShadow: '0 0 10px rgba(22, 101, 216, 0.4), 0 0 20px rgba(22, 101, 216, 0.2), inset 0 0 10px rgba(22, 101, 216, 0.2)',
-          }
-        },
-        'p code': {
-          bg: 'rgba(0, 0, 0, 0.3)',
-          p: 1,
-          borderRadius: 'sm',
-          fontFamily: 'mono',
-        },
-        'ul': {
-          listStyleType: 'disc',
-          pl: 6,
-          mb: 4,
-        },
-        'ol': {
-          listStyleType: 'decimal',
-          pl: 6,
-          mb: 4,
-        },
-        'li': {
-          mb: 2,
-        },
-        'p': {
-          mb: 4,
-          lineHeight: 'tall',
-        },
-        'h1, h2, h3, h4, h5, h6': {
-          color: 'white',
-          fontWeight: 'bold',
-        },
-        'h1': { fontSize: '2xl', mb: 6, mt: 4 },
-        'h2': { fontSize: 'xl', mb: 4, mt: 6 },
-        'h3': { fontSize: 'lg', mb: 3, mt: 4 },
-      }}>
-        <ReactMarkdown>{content}</ReactMarkdown>
-      </Box>
+      <div 
+        className="markdown-content"
+        dangerouslySetInnerHTML={{ __html: content }} 
+      />
     </Box>
   );
 };

@@ -157,3 +157,78 @@ svg circle:nth-child(4n) {
   background-size: 20px 20px;
   animation: borderFlow 20s linear infinite;
 }
+
+.markdown-content {
+  color: #fff;
+  line-height: 1.6;
+}
+
+.markdown-content h1 {
+  font-size: 2em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content h2 {
+  font-size: 1.5em;
+  margin: 1em 0 0.5em;
+}
+
+.markdown-content h3 {
+  font-size: 1.2em;
+  margin: 1em 0 0.5em;
+}
+
+.markdown-content p {
+  margin: 1em 0;
+}
+
+.markdown-content ul {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.markdown-content li {
+  margin: 0.5em 0;
+}
+
+.markdown-content img {
+  max-width: 150px;
+  height: auto;
+  display: inline-block;
+  margin: 0 10px;
+  vertical-align: middle;
+}
+
+.markdown-content table {
+  width: auto;
+  margin: 1em auto;
+  border-collapse: collapse;
+  border: none;
+}
+
+.markdown-content td {
+  padding: 10px;
+  text-align: center;
+  border: none;
+}
+
+.markdown-content td img {
+  max-width: 150px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.markdown-content code {
+  background: rgba(22, 101, 216, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.markdown-content pre code {
+  display: block;
+  padding: 1em;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.2);
+}
