@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, ChakraProvider, Container, Text, Button, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
+import { Box, ChakraProvider, Container, Text, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
 import ReactMarkdown from 'react-markdown'
 
 const theme = extendTheme({
@@ -51,7 +51,7 @@ const Header = () => (
           </Text>
         </HStack>
 
-        {/* Navigation Buttons */}
+        {/* Login Button - Commented out for future reference
         <HStack spacing={3}>
           <Button
             bg="rgba(4, 11, 20, 0.95)"
@@ -76,6 +76,7 @@ const Header = () => (
             Log In
           </Button>
         </HStack>
+        */}
       </Flex>
     </Container>
   </Box>
@@ -156,8 +157,13 @@ interface ContentItem {
   path: string;
 }
 
+interface Section {
+  title: string;
+  items: ContentItem[];
+}
+
 const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => {
-  const sections = [
+  const sections: Section[] = [
     {
       title: "INTRO",
       items: [
