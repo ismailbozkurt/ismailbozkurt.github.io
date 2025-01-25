@@ -2,6 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { Box, ChakraProvider, Container, Text, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
 import ReactMarkdown from 'react-markdown'
 
+// Helper function to generate correct paths for GitHub Pages
+const getPath = (path: string) => {
+  // Remove leading slash if present
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  // Remove repository name if present
+  const withoutRepo = cleanPath.replace('ismailbozkurt.github.io/', '');
+  // Get the base URL from Vite
+  const base = import.meta.env.BASE_URL;
+  return `${base}${withoutRepo}`;
+};
+
 const theme = extendTheme({
   styles: {
     global: {
@@ -15,7 +26,7 @@ const theme = extendTheme({
 
 const LogoIcon = () => (
   <Image
-    src="/neon-geometric.webp"
+    src={getPath('neon-geometric.webp')}
     alt="Geometric Logo"
     width="40px"
     height="40px"
@@ -169,7 +180,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "About Me",
-          path: "/Content/Intro/About-me.md"
+          path: getPath('Content/Intro/About-me.md')
         }
       ]
     },
@@ -178,7 +189,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "Sample",
-          path: "/Content/Code Pieces/sample.md"
+          path: getPath('Content/Code Pieces/sample.md')
         }
       ]
     },
@@ -187,7 +198,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       items: [
         {
           name: "Research Methodology",
-          path: "/Content/Vulnerability Research/deneme.md"
+          path: getPath('Content/Vulnerability Research/deneme.md')
         }
       ]
     }
@@ -310,7 +321,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
 };
 
 const App: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<string>('/Content/Intro/About-me.md');
+  const [selectedFile, setSelectedFile] = useState<string>(getPath('Content/Intro/About-me.md'));
 
   const handleFileSelect = (path: string) => {
     setSelectedFile(path);
