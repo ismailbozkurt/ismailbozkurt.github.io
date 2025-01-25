@@ -6,6 +6,8 @@ import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import rehypeSanitize from 'rehype-sanitize'
+import { config } from './config/env'
+import { Certifications } from './components/Certifications'
 
 const theme = extendTheme({
   styles: {
@@ -186,9 +188,15 @@ interface Section {
   items: ContentItem[];
 }
 
-const getGitHubRawUrl = (path: string) => {
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return `https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/main/${cleanPath}`;
+const getContentUrl = (path: string) => {
+  if (config.isProd) {
+    // GitHub raw content URL for production
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    return `${config.contentBaseUrl}/${cleanPath}`;
+  } else {
+    // Local API server URL for development
+    return `${config.apiBaseUrl}/api/file?path=${encodeURIComponent(path)}`;
+  }
 };
 
 const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => {
@@ -322,34 +330,47 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
 };
 
 const ContentViewer = ({ filePath }: { filePath: string }) => {
-  const [content, setContent] = useState<string>('')
+  const [beforeContent, setBeforeContent] = useState<string>('')
+  const [afterContent, setAfterContent] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const githubUrl = getGitHubRawUrl(filePath)
-        console.log('Fetching content from GitHub:', githubUrl)
-        const response = await fetch(githubUrl)
+        const url = getContentUrl(filePath);
+        console.log(`Fetching content from ${config.isProd ? 'GitHub' : 'local server'}:`, url);
+        const response = await fetch(url)
         if (!response.ok) {
           throw new Error(`Failed to fetch content: ${response.status}`)
         }
         const text = await response.text()
         
-        const processedContent = await unified()
-          .use(remarkParse)
-          .use(remarkGfm)
-          .use(remarkRehype)
-          .use(rehypeSanitize)
-          .use(rehypeStringify)
-          .process(text)
+        // Split content at the certifications section and technical arsenal section
+        const [beforeCert, rest] = text.split('## 🏆 Arsenal Certifications')
+        const [_, afterTechnical] = rest.split('## 🛠️ Technical Arsenal')
         
-        setContent(String(processedContent))
+        const processContent = async (text: string) => {
+          if (!text) return ''
+          const processed = await unified()
+            .use(remarkParse)
+            .use(remarkGfm)
+            .use(remarkRehype, { allowDangerousHtml: true })
+            .use(rehypeStringify, { allowDangerousHtml: true })
+            .process(text)
+          return String(processed)
+        }
+        
+        const beforeHtml = await processContent(beforeCert)
+        const afterHtml = await processContent('## 🛠️ Technical Arsenal' + afterTechnical)
+        
+        setBeforeContent(beforeHtml)
+        setAfterContent(afterHtml)
         setError(null)
       } catch (err) {
         console.error('Error fetching content:', err)
         setError('Failed to load content')
-        setContent('')
+        setBeforeContent('')
+        setAfterContent('')
       }
     }
 
@@ -373,8 +394,12 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
       bg="rgba(0, 0, 0, 0.3)"
       borderRadius="lg"
       backdropFilter="blur(12px)"
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
+    >
+      <Box dangerouslySetInnerHTML={{ __html: beforeContent }} />
+      <h2>🏆 Arsenal Certifications</h2>
+      <Certifications />
+      <Box dangerouslySetInnerHTML={{ __html: afterContent }} />
+    </Box>
   )
 }
 
