@@ -161,6 +161,20 @@ svg circle:nth-child(4n) {
 .markdown-content {
   color: #fff;
   line-height: 1.6;
+  position: relative;
+}
+
+.markdown-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid rgba(22, 101, 216, 0.3);
+  box-shadow: 0 0 15px rgba(22, 101, 216, 0.3);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .markdown-content h1,
@@ -255,8 +269,9 @@ svg circle:nth-child(4n) {
   border-radius: 4px;
   padding: 0.2em 0.4em;
   font-family: 'Courier New', monospace;
+  border: 1px solid rgba(22, 101, 216, 0.3);
+  box-shadow: 0 0 10px rgba(22, 101, 216, 0.2);
   margin: 0 0.2em;
-  border: none;
 }
 
 /* Custom list styling */
@@ -275,4 +290,21 @@ svg circle:nth-child(4n) {
 
 .list-item::before {
   display: none;
+}
+
+/* Add glow animation */
+@keyframes borderGlow {
+  0% {
+    box-shadow: 0 0 10px rgba(22, 101, 216, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(22, 101, 216, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(22, 101, 216, 0.2);
+  }
+}
+
+.markdown-content code {
+  animation: borderGlow 3s ease-in-out infinite;
 }

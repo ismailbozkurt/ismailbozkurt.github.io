@@ -12,45 +12,49 @@ const theme = extendTheme({
     global: {
       body: {
         bg: '#040B14',
-        color: 'white',
+        color: 'rgba(255, 255, 255, 0.7)',
       },
       '.markdown-content': {
         h1: {
           fontSize: '2xl',
           fontWeight: 'bold',
           mb: 4,
-          color: 'white',
+          color: 'rgba(255, 255, 255, 0.8)',
         },
         h2: {
           fontSize: 'xl',
           fontWeight: 'bold',
           mb: 3,
           mt: 6,
-          color: 'white',
+          color: 'rgba(255, 255, 255, 0.8)',
         },
         h3: {
           fontSize: 'lg',
           fontWeight: 'bold',
           mb: 2,
           mt: 4,
-          color: 'white',
+          color: 'rgba(255, 255, 255, 0.8)',
         },
         p: {
           mb: 4,
           lineHeight: 'tall',
+          color: 'rgba(255, 255, 255, 0.7)',
         },
         ul: {
           ml: 4,
           mb: 4,
+          color: 'rgba(255, 255, 255, 0.7)',
         },
         li: {
           mb: 1,
+          color: 'rgba(255, 255, 255, 0.7)',
         },
         code: {
           bg: 'rgba(0, 0, 0, 0.3)',
           p: 1,
           borderRadius: 'sm',
           fontFamily: 'mono',
+          color: 'rgba(255, 255, 255, 0.7)',
         },
         'pre code': {
           display: 'block',
@@ -59,7 +63,7 @@ const theme = extendTheme({
           bg: 'rgba(0, 0, 0, 0.5)',
           border: '1px solid rgba(22, 101, 216, 0.3)',
           borderRadius: '0',
-          color: 'whiteAlpha.900',
+          color: 'rgba(255, 255, 255, 0.7)',
         }
       }
     },
@@ -188,6 +192,7 @@ const getGitHubRawUrl = (path: string) => {
 };
 
 const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => {
+  const [selectedPath, setSelectedPath] = useState<string>('Content/Intro/About-me.md');
   const sections: Section[] = [
     {
       title: "INTRO",
@@ -248,7 +253,7 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
         {sections.map((section, index) => (
           <Box key={index}>
             <Text 
-              color="rgba(22, 101, 216, 0.8)" 
+              color="white" 
               fontSize="sm" 
               mb={3}
               fontWeight="500"
@@ -257,36 +262,57 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
               {section.title}
             </Text>
             <VStack align="stretch" spacing={2}>
-              {section.items.map((item, itemIndex) => (
-                <Link
-                  key={itemIndex}
-                  as="button"
-                  color="white"
-                  fontSize="13px"
-                  cursor="pointer"
-                  textAlign="left"
-                  display="block"
-                  width="100%"
-                  px={3}
-                  py={1.5}
-                  bg="rgba(4, 11, 20, 0.95)"
-                  border="1px solid rgba(22, 101, 216, 0.3)"
-                  borderRadius="0"
-                  transition="all 0.2s"
-                  _hover={{ 
-                    bg: 'rgba(22, 101, 216, 0.15)',
-                    boxShadow: '0 0 10px rgba(22, 101, 216, 0.3)',
-                    textDecoration: 'none',
-                    color: 'white'
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onFileSelect(item.path);
-                  }}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {section.items.map((item, itemIndex) => {
+                const isSelected = selectedPath === item.path;
+                return (
+                  <Link
+                    key={itemIndex}
+                    as="button"
+                    color="white"
+                    fontSize="13px"
+                    cursor="pointer"
+                    textAlign="left"
+                    display="block"
+                    width="100%"
+                    px={3}
+                    py={1.5}
+                    bg={isSelected ? 'rgba(22, 101, 216, 0.25)' : 'transparent'}
+                    border="none"
+                    outline="none"
+                    borderRadius="0"
+                    transition="all 0.3s ease"
+                    textShadow={isSelected ? '0 0 10px rgba(255, 255, 255, 0.6)' : 'none'}
+                    boxShadow={isSelected ? '0 0 15px rgba(22, 101, 216, 0.4) inset' : 'none'}
+                    _hover={{ 
+                      bg: 'rgba(22, 101, 216, 0.15)',
+                      boxShadow: '0 0 10px rgba(22, 101, 216, 0.3)',
+                      textDecoration: 'none',
+                      color: 'white',
+                      textShadow: '0 0 8px rgba(255, 255, 255, 0.5)',
+                      border: 'none'
+                    }}
+                    _active={{
+                      bg: 'rgba(22, 101, 216, 0.25)',
+                      boxShadow: '0 0 15px rgba(22, 101, 216, 0.4) inset',
+                      transform: 'scale(0.98)',
+                      color: 'white',
+                      textShadow: '0 0 12px rgba(255, 255, 255, 0.6)',
+                      border: 'none'
+                    }}
+                    _focus={{
+                      border: 'none',
+                      outline: 'none'
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedPath(item.path);
+                      onFileSelect(item.path);
+                    }}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
             </VStack>
           </Box>
         ))}
