@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Box, ChakraProvider, Container, Text, Button, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
+import { Box, ChakraProvider, Container, Text, extendTheme, Flex, Image, HStack, VStack, Link } from '@chakra-ui/react'
 import { remark } from 'remark'
 import html from 'remark-html'
 
