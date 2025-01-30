@@ -12,6 +12,7 @@ This guide explains how to add new content to the blog.
      - `/Content/Code Pieces/` for code-related content
      - `/Content/Projects/` for project documentation
      - `/Content/Vulnerability Research/` for security research
+     - `/Content/Notes2Myself/` for myself
 
 2. **Write Your Content**
 

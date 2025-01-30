@@ -227,6 +227,15 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
           path: "Content/Vulnerability Research/deneme.md"
         }
       ]
+    },
+    {
+      title: "NOTES2MYSELF",
+      items: [
+        {
+          name: "Notes2Myself",
+          path: "Content/Notes2Myself/Notes2Myself.md"
+        }
+      ]
     }
   ];
 
