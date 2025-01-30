@@ -55,7 +55,7 @@ This guide explains how to add new content to the blog.
 
 ## Example
 
-Adding a new vulnerability research article:
+Adding a new vulnerability research article::
 
 1. Create file: `/Content/Vulnerability Research/buffer-overflow.md`
 2. Write your content in markdown
