@@ -12,4 +12,4 @@ This is a place where I write notes to myself. Feel free to contact me -> [Email
 
 > When you sum imagination and technical knowledge, you can invent infinite things.
 
->> What happens a website changes ui or functionality based on user via browser? For example, based on the information about the user, the website changes the ui or functionality. is it possible?
+> > What happens a website changes ui or functionality based on user via browser? For example, based on the information about the user, the website changes the ui or functionality. The real question, is it possible to do that in user side! is it possible?
