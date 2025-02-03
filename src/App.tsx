@@ -257,6 +257,14 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
         {
           name: "HowThingsGetComplicated-2",
           path: "Content/HowThingsGetComplicated/HowThingsGetComplicated-2.md"
+        },
+        {
+          name: "HowThingsGetComplicated-3",
+          path: "Content/HowThingsGetComplicated/HowThingsGetComplicated-3.md"
+        },
+        {
+          name: "HowThingsGetComplicated-4",
+          path: "Content/HowThingsGetComplicated/HowThingsGetComplicated-4.md"
         }
       ]
     }
