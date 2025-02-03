@@ -23,6 +23,40 @@ const theme = extendTheme({
           color: 'rgba(255, 255, 255, 0.8)',
         },
         img: {
+          maxWidth: '1000px',
+          width: '100%',
+          height: 'auto',
+          display: 'block',
+          margin: '20px auto',
+          borderRadius: '8px',
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+        },
+        'div#cert-placeholder': {
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '10px',
+          justifyContent: 'center',
+          alignItems: 'center',
+          margin: '20px 0',
+        },
+        'img[src*="OSWP"], img[src*="OSCE"], img[src*="OSCP"]': {
+          maxWidth: '50px',
+          width: 'auto',
+          height: 'auto',
+          display: 'inline-block',
+          margin: '5px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+          verticalAlign: 'middle',
+        },
+        'img[src*="badge"]': {
+          maxWidth: '120px',
+          margin: '5px',
+          boxShadow: 'none',
+          borderRadius: '4px',
+        },
+        'img[src*="github-readme-stats"]': {
+          position: 'left',
           maxWidth: '100%',
           width: 'auto',
           height: 'auto',
@@ -31,7 +65,6 @@ const theme = extendTheme({
           borderRadius: '8px',
           boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
         },
-        
         h2: {
           fontSize: 'xl',
           fontWeight: 'bold',
@@ -388,7 +421,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
           const processed = await unified()
             .use(remarkParse)
             .use(remarkGfm)
-            .use(remarkRehype, { allowDangerousHtml: true, maxWidth: 1000, maxHeight: 1000 })
+            .use(remarkRehype, { allowDangerousHtml: true})
             .use(rehypeStringify, { allowDangerousHtml: true })
             .process(text)
           return String(processed)

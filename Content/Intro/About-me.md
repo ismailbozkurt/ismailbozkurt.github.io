@@ -94,7 +94,7 @@ Offensive security specialist and vulnerability researcher with a track record o
 Turkish (Native)
 English (Professional)
 
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=ismailbozkurt&show_icons=true&theme=radical)
+<img src="https://github-readme-stats.vercel.app/api?username=ismailbozkurt&show_icons=true&theme=radical" alt="GitHub Stats"  />
 
 ![Red Teaming](https://img.shields.io/badge/Red%20Teaming-Expert-red)
 ![Malware Analysis](https://img.shields.io/badge/Malware%20Analysis-Advanced-blue)
