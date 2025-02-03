@@ -459,11 +459,11 @@ I've also created a login request for testing.
 
 #### Admin Dashboard Page
 
-![Admin Dashboard Page](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/HTGC3-admin-dashboard.png)
+![Admin Dashboard Page](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/admin-dashboard-page.png)
 
 #### User Dashboard Page
 
-![User Dashboard Page](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/HTGC3-user-dashboard.png)
+![User Dashboard Page](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/user-dashboard-page.png)
 
 ## Final Thoughts for this part
 
