@@ -455,7 +455,7 @@ I've also created a login request for testing.
 
 #### Login Page
 
-![Login Page](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/HTGC3-login.png)
+![Login Page](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/login-page.png)
 
 #### Admin Dashboard Page
 
