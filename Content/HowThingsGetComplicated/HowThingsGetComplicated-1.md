@@ -1,6 +1,8 @@
-In this series, I will make a list of things that I think it will be complicated and try to explain them in a way that is easy to understand.
+In this series, I will create a list of things that I find complicated and try to explain them in a way that is easy to understand. My approach will start with basic potato implementations and gradually improve them using design patterns and best practices.
 
-Lets think about a project with simple authentication feature with TypeScript, NodeJS and Vue.js. And lets see how things get complicated.
+Through this journey, I believe I will learn a lot, and it will be a great way to explore modern approaches and best practices.
+
+Let's consider a project with a simple authentication feature using TypeScript, Node.js, and Vue.js, and see how things get complicated.
 
 To do this, lets create with creating structure of the project.
 
@@ -33,19 +35,15 @@ To do this, lets create with creating structure of the project.
   │   └── types/         # TypeScript type definitions
   ```
 
-  It's simple approach to create project structure. Let's understand what are we going to do with this project.
+This is a simple approach to structuring a project. Let's first understand what we aim to accomplish with this project.
 
-  First, start with explaining how to create project structure.
+Backend Package – Responsible for database operations, database structure, authentication, etc.
+Frontend Package – Responsible for the user interface, authentication, etc.
 
-  backend package is responsible for database operations, database structure, authentication etc.
+Starting with the Backend
+Let's begin by setting up the backend package.
 
-  frontend package is responsible for user interface, authentication etc.
-
-  Now, lets start with backend package.
-
-First we need to create entity for user. There can be 2 types of users for now. Admin and User.
-
-First create types for users and authentication.
+First, we need to create an entity for the User. For now, there will be two types of users: Admin and User. We'll start by defining the types for users and authentication.
 
 backend/src/types/auth-type.ts
 
@@ -673,4 +671,8 @@ To start server, run the following command:
 npm run dev:backend
 ```
 
-![Backend server running](./public/images/backend-running.png)
+![Backend server running](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/backend-running.png)
+
+---
+
+<img src="https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/backend-running.png" />

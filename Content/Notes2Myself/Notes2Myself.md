@@ -1,6 +1,6 @@
 # Notes2Myself
 
-This is a place where I write notes to myself. Feel free to contact me -> [Email](mailto:ismailbozkurtr@gmail.com)
+This is a place where I write notes to myself. Feel free to contact me -> ismailbozkurtr@gmail.com
 
 > Be aware of the privileges you have! Appreciate the value of what you own!
 

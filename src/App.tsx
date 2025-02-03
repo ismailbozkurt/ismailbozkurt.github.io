@@ -22,6 +22,16 @@ const theme = extendTheme({
           mb: 4,
           color: 'rgba(255, 255, 255, 0.8)',
         },
+        img: {
+          maxWidth: '1000px',
+          maxHeight: '1000px',
+          height: 'auto',
+          display: 'block',
+          margin: '0 auto',
+          borderRadius: '8px',
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+        },
+        
         h2: {
           fontSize: 'xl',
           fontWeight: 'bold',
@@ -366,7 +376,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
           const processed = await unified()
             .use(remarkParse)
             .use(remarkGfm)
-            .use(remarkRehype, { allowDangerousHtml: true })
+            .use(remarkRehype, { allowDangerousHtml: true, maxWidth: 1000, maxHeight: 1000 })
             .use(rehypeStringify, { allowDangerousHtml: true })
             .process(text)
           return String(processed)
