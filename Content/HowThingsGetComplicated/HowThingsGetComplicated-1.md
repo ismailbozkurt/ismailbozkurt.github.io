@@ -672,7 +672,3 @@ npm run dev:backend
 ```
 
 ![Backend server running](https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/backend-running.png)
-
----
-
-<img src="https://raw.githubusercontent.com/ismailbozkurt/ismailbozkurt.github.io/refs/heads/main/public/images/backend-running.png" />
