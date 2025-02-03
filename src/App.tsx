@@ -388,7 +388,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
           const processed = await unified()
             .use(remarkParse)
             .use(remarkGfm)
-            .use(remarkRehype, { allowDangerousHtml: true, maxWidth: 1000, maxHeight: 1000 })
+            .use(remarkRehype, { allowDangerousHtml: true, maxWidth: '100%', maxHeight: '100%' })
             .use(rehypeStringify, { allowDangerousHtml: true })
             .process(text)
           return String(processed)
