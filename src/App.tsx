@@ -23,11 +23,11 @@ const theme = extendTheme({
           color: 'rgba(255, 255, 255, 0.8)',
         },
         img: {
-          maxWidth: '1000px',
-          maxHeight: '1000px',
+          maxWidth: '100%',
+          width: 'auto',
           height: 'auto',
           display: 'block',
-          margin: '0 auto',
+          margin: '20px auto',
           borderRadius: '8px',
           boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
         },
@@ -388,7 +388,7 @@ const ContentViewer = ({ filePath }: { filePath: string }) => {
           const processed = await unified()
             .use(remarkParse)
             .use(remarkGfm)
-            .use(remarkRehype, { allowDangerousHtml: true, maxWidth: '100%', maxHeight: '100%' })
+            .use(remarkRehype, { allowDangerousHtml: true, maxWidth: 1000, maxHeight: 1000 })
             .use(rehypeStringify, { allowDangerousHtml: true })
             .process(text)
           return String(processed)
