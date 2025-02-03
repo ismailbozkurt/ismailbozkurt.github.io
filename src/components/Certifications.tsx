@@ -27,7 +27,7 @@ export const Certifications = () => {
       <HStack spacing={4} mb={4}>
         {certifications.map((cert, index) => (
           <Image
-            key={index.id}
+            key={index}
             src={cert.image}
             //alt={cert.name}
             maxWidth="200px"
