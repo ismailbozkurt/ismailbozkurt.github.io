@@ -251,8 +251,12 @@ const Sidebar = ({ onFileSelect }: { onFileSelect: (path: string) => void }) => 
       title: "HowThingsGetComplicated",
       items: [
         {
-          name: "HowThingsGetComplicated",
+          name: "HowThingsGetComplicated-1",
           path: "Content/HowThingsGetComplicated/HowThingsGetComplicated-1.md"
+        },
+        {
+          name: "HowThingsGetComplicated-2",
+          path: "Content/HowThingsGetComplicated/HowThingsGetComplicated-2.md"
         }
       ]
     }
