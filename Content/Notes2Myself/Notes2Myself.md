@@ -10,8 +10,10 @@ This is a place where I write notes to myself. Feel free to contact me -> ismail
 
 > If you can't explain it simply, you don't understand it well enough. - Albert Einstein
 
-> When you sum imagination and technical knowledge, you can invent infinite things.
+> Imagination and technical knowledge combined allow you to invent infinite things.
 
 > > What happens a website changes ui or functionality based on user via browser? For example, based on the information about the user, the website changes the ui or functionality. The real question, is it possible to do that in user side! is it possible?
 
 > Do not think around the problem, if you want to make a change, master about one question. The question is what's in it for me?
+
+> Remember, if you doubt yourself, you cannot succeed. The first rule of success is to believe in yourself.
