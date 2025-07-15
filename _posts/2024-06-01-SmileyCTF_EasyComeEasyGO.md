@@ -11,6 +11,8 @@ image: "/assets/css/pics/background/hexellence.png"
 
 ## Binary Analysis
 
+`main function`
+
 ```go
 void main.main(void)
 
