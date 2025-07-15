@@ -5,7 +5,7 @@ layout: post
 categories: [CTF, Writeup]
 tags: [smileyctf, reverse, go]
 description: "Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation."
-image: "/assets/css/pics/background/hexellence.png"
+image: "/assets/images/go-crackme.png"
 ---
 # Challange binary - chal
 
