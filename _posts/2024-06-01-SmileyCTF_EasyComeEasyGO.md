@@ -9,6 +9,8 @@ image: "/assets/css/pics/background/hexellence.png"
 ---
 # Challange binary - chal
 
+## Binary Analysis
+
 ```go
 void main.main(void)
 
