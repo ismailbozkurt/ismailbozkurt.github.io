@@ -1,5 +1,5 @@
 ---
-title: "SmileyCTF Babyrop"
+title: "SmileyCTF Babyrop-1"
 date: 2025-07-17 12:00:00 +0000
 layout: post
 categories: [CTF, Writeup]
@@ -177,7 +177,7 @@ gef➤
 
 Running the binary and providing the pattern string revealed an offset of 40 bytes. This means that after 40 bytes, the next 8 bytes will overwrite the RIP register.
 
-![Pasted image 20250716062356](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716062356.png)
+![Pasted image 20250716062356](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716062356.png)
 
 ### Creating basic exploit script
 
@@ -283,7 +283,7 @@ io.sendline(payload)
 
 After executing `exploit.py`, the `RIP register` was successfully overwritten with `0x4141414142424242`.
 
-![Pasted image 20250716065717](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716065717.png)
+![Pasted image 20250716065717](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716065717.png)
 
 
 ### The exploit strategy
@@ -294,7 +294,7 @@ The first thing I did was recall the print function from the binary. As you can 
 
 It's also worth mentioning that the print function is safe from format-string vulnerabilities.  
 
-![Pasted image 20250716071941](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716071941.png)
+![Pasted image 20250716071941](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716071941.png)
 
 
 ```python
@@ -332,7 +332,7 @@ However, there's a trick here: while the GOT table is read-only, the print funct
 
 Since the binary doesn't contain a pop rdi gadget, let's examine how print is called in main.
 
-![Pasted image 20250716072957](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716072957.png)
+![Pasted image 20250716072957](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716072957.png)
 
 Since the binary doesn't contain any `pop rdi` gadget. So take a closer look the how `print` called in the `main`.
 
@@ -345,7 +345,7 @@ Since the binary doesn't contain any `pop rdi` gadget. So take a closer look the
 
 The parameter value comes from $rbp-0x20. When we run GDB again and set a breakpoint at *main+0x49, $rbp-0x20 points to the start of the input.
 
-![Pasted image 20250716074707](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716074707.png)
+![Pasted image 20250716074707](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716074707.png)
 
 ### The problem of $rbp
 
@@ -373,7 +373,7 @@ The problem is that when we overwrite RIP, we also overwrite the RBP register.
 
 
 
-![[Pasted image 20250716080336](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716080336.png)
+![[Pasted image 20250716080336](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716080336.png)
 
 The RBP register is located 8 bytes before the RIP register.
 The leave instruction performs two operations: `Set RSP to RBP, then pop RBP`
@@ -387,7 +387,7 @@ Since overwriting the RBP register with an invalid value prevents correct addres
 
 
 
-![Pasted image 20250716080308](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716080308.png)
+![Pasted image 20250716080308](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716080308.png)
 
 
 
@@ -414,11 +414,11 @@ io.sendline(payload)
 
 The image below shows the successful leak of the print function's address.
 
-![Pasted image 20250716081544](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716081544.png)
+![Pasted image 20250716081544](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716081544.png)
 
 However, another problem needs to be resolved: after leaking the print address, execution landed at 0x404038, not the stack. Fortunately, execution landed in a writable memory area. Since we cannot control this address at the moment, we need a workaround.
 
-![Pasted image 20250716081920](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716081920.png)
+![Pasted image 20250716081920](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716081920.png)
 
 To overcome this, we must write to that area. Before leaking the print address, we'll prepare a landing area, then leak the address, and then we'll be in business.
 
@@ -490,11 +490,11 @@ io.sendline(payload)
 
 The screenshot below proves that the RBP register was overwritten with `0x404058`
 
-![Pasted image 20250716090734](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716090734.png)
+![Pasted image 20250716090734](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716090734.png)
 
 To avoid losing program control, we must re-overflow the buffer. The screenshot below confirms that address 0x404038 was overwritten with the input buffer.   
 
-![Pasted image 20250716091703](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716091703.png)
+![Pasted image 20250716091703](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716091703.png)
 
 
 
@@ -548,7 +548,7 @@ info(hex(leak))
 
 The problem with this payload is that internal calls within the print function attempt to write to lower addresses on the stack. The image below shows _IO_file_xsputn+0xa trying to push 0x404000. When this happens, it continuously goes to lower addresses, which are not writable. The writable area starts from 0x404000.
 
-![Pasted image 20250716095624](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250716095624.png)
+![Pasted image 20250716095624](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716095624.png)
 
 Therefore, we need to align RSP to a higher address. The stack in the print function should remain within 0x404000 - 0x405000.
 
@@ -635,18 +635,18 @@ log.success(f'LIBC LEAKED PUTS ADDR: {hex(libc_puts_addr)}')
 
 The execution of this payload,
 
-![Pasted image 20250717003855](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250717003855.png)
+![Pasted image 20250717003855](/assets/images/SmileyCTF-babyrop/Pasted_image_20250717003855.png)
 
 The problem with this payload is that after successfully leaking the puts address from libc, execution landed at 0x404078. If we re-check the landed area, there are different values than what we put there.
 
-![Pasted image 20250717004134](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250717004134.png)
+![Pasted image 20250717004134](/assets/images/SmileyCTF-babyrop/Pasted_image_20250717004134.png)
 
 This occurs because print's internal calls overwrite the payload body. To overcome this, RIP should land on a specific value. To properly set the RIP value, we need to manipulate the RSP value to higher addresses.
 
 
 After some tries, the RIP value successfully landed beginning of the `second_stage_payload` .
 
-![Pasted image 20250717011046](assets/images/SmileyCTF-babyrop/Pasted%20image%2020250717011046.png)
+![Pasted image 20250717011046](/assets/images/SmileyCTF-babyrop/Pasted_image_20250717011046.png)
 
 The payload shared below,
 
@@ -820,6 +820,7 @@ second_stage_payload = flat({
         ],
     0x20:[
         print_addr+0x20,
+        add_rsp_8,
         add_rsp_8,
         add_rsp_8,
         add_rsp_8,
