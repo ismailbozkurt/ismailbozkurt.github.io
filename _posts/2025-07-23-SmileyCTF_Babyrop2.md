@@ -1,6 +1,6 @@
 ---
 title: "SmileyCTF babyrop Writeup"
-date: 2025-07-23 18:00:00 +0000
+date: 2025-07-23 00:00:00 +0000
 layout: post
 categories: [CTF, Writeup, SmileyCTF, babyrop]
 tags: [smileyctf, pwn, rop, return-oriented-programming, linux-binary-exploitation, binary-exploitation, buffer-overflow, stack-based-buffer-overflow, python, c, pwntools, gef]
