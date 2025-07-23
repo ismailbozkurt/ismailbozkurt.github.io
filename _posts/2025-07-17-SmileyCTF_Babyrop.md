@@ -5,7 +5,7 @@ layout: post
 categories: [CTF, Writeup]
 tags: [smileyctf, pwn, rop, return-oriented-programming, linux-binary-exploitation, binary-exploitation, buffer-overflow, stack-based-buffer-overflow, python, c, pwntools, gef]
 description: "Reverse engineering and solving the SmileyCTF Babyrop challenge binary. Includes libc leak, Stack pivot and ROP."
-image: "/assets/images/go-crackme.png"
+image: "/assets/images/SmileyCTF-babyrop/smileyCTF_pic.png"
 ---
 
 ## The Challenge
