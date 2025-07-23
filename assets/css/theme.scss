@@ -44,6 +44,8 @@ body {
   background-repeat: no-repeat;
   font-family: $font-family-sans;
   animation: circuit-glow 4s ease-in-out infinite alternate;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes circuit-glow {

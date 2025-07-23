@@ -3,7 +3,8 @@
 /* Only keep monospace for code blocks */
 .post-content code,
 .post-content pre {
-    font-family: 'Fira Mono', 'Consolas', 'Liberation Mono', monospace;
+    /* font-family: 'Fira Mono', 'Consolas', 'Liberation Mono', monospace; */
+    font-family: 'Ubuntu', 'Roboto', 'Segoe UI', Arial, sans-serif;
 }
 
 .post-content img,

