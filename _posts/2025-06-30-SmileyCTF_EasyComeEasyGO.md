@@ -1,6 +1,6 @@
 ---
 title: "SmileyCTF EasyComeEasyGO"
-date: 2024-06-01 12:00:00 +0000
+date: 2025-06-01 12:00:00 +0000
 layout: post
 categories: [CTF, Writeup]
 tags: [smileyctf, reverse, go]

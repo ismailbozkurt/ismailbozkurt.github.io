@@ -4,7 +4,7 @@ date: 2025-07-24 18:00:00 +0000
 layout: post
 categories: [CTF, Writeup, SmileyCTF, babyrop]
 tags: [smileyctf, pwn, rop, return-oriented-programming, linux-binary-exploitation, binary-exploitation, buffer-overflow, stack-based-buffer-overflow, python, c, pwntools, gef]
-description: "Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes GOT overwrite with limited gadgets"
+description: "Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes LIBC leak and Return-Oriented Programming"
 image: "/assets/images/SmileyCTF-babyrop/smileyCTF_pic.png"
 ---
 
