@@ -1,5 +1,5 @@
 ---
-title: "SmileyCTF Babyrop-1"
+title: "SmileyCTF Babyrop Writeup 1"
 date: 2025-07-17 00:00:00 +0000
 layout: post
 categories: [CTF, Writeup]
