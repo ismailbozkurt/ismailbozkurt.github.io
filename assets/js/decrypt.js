@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
         block.innerHTML = `
       <label style="display:block;margin-bottom:0.5em;font-weight:500;">🔒 This content is password-protected:</label>
       <div style="display:flex;align-items:center;gap:0.5em;">
-        <input type="password" placeholder="Enter 32-character password" style="flex:1;"/>
+        <input type="password" placeholder="Enter password" style="flex:1;"/>
         <button>Decrypt</button>
         <input type="checkbox" id="show-pw" style="margin-left:0.5em;" title="Show password"/>
         <label for="show-pw" style="font-size:1.1em;cursor:pointer;">👁️</label>

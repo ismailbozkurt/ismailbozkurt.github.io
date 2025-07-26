@@ -14,9 +14,9 @@ def main():
         print('Usage: python encrypt_content.py <input_file> <password>')
         sys.exit(1)
     infile, password = sys.argv[1], sys.argv[2]
-    if len(password) != 32:
-        print('Password must be exactly 32 characters.')
-        sys.exit(1)
+    #if len(password) != 32:
+    #    print('Password must be exactly 32 characters.')
+    #    sys.exit(1)
     with open(infile, 'r', encoding='utf-8') as f:
         plaintext = f.read()
     key = SHA256.new(password.encode('utf-8')).digest()
