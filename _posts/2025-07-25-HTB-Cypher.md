@@ -4,8 +4,8 @@ date: 2025-07-25 18:00:00 +0000
 layout: post
 categories: [CTF, Writeup, HackTheBox]
 tags: [HackTheBox, Cypher, Writeup, CTF, Neo4j, CypherInjection, QueryInjection, WebExploitation, CommandInjection, APOC, CustomProcedures, ReverseShell, PrivilegeEscalation, SudoMisconfiguration, BBot, LinuxPrivEsc, Nginx, DirectoryEnumeration, JARAnalysis]
-description: "Enumeration and pwning the HackTheBox Cypher Box. Includes cypher query injection"
-image: "/assets/images/SmileyCTF-babyrop/smileyCTF_pic.png"
+description: "This blog post details the process of exploiting the HackTheBox Cypher machine, focusing on a multi-stage attack. It covers initial enumeration, identifying a Cypher query injection vulnerability, and subsequently discovering a command injection within a custom Neo4j APOC extension. The writeup then explains how these vulnerabilities were chained to gain a reverse shell, ultimately leading to privilege escalation through a sudo misconfiguration involving the bbot tool."
+image: "/assets/images/HTB-Cypher/HTB-Cypher.png"
 ---
 
 ## Enumeration
@@ -186,3 +186,47 @@ Following PoC steps lead to root privileges in the box.
 
 ![7c7cc03e56b81e330368f012e41accbc.png](/assets/images/HTB-Cypher/7c7cc03e56b81e330368f012e41accbc.png)
 
+## Shadow File
+
+```bash
+uid=0(root) gid=0(root) groups=0(root)
+root@cypher:/dev/shm# cat /root/root.txt
+656453da00441f4e2707a91535d6e5b3
+root@cypher:/dev/shm# cat /etc/shadow
+root:$y$j9T$ianAmmc1w6VSodw.1fzgk/$3DenO5YJ1VBvE1VekRL79v6bN00fhcbA59zeeLciY67:20133:0:99999:7:::
+daemon:*:19962:0:99999:7:::
+bin:*:19962:0:99999:7:::
+sys:*:19962:0:99999:7:::
+sync:*:19962:0:99999:7:::
+games:*:19962:0:99999:7:::
+man:*:19962:0:99999:7:::
+lp:*:19962:0:99999:7:::
+mail:*:19962:0:99999:7:::
+news:*:19962:0:99999:7:::
+uucp:*:19962:0:99999:7:::
+proxy:*:19962:0:99999:7:::
+www-data:*:19962:0:99999:7:::
+backup:*:19962:0:99999:7:::
+list:*:19962:0:99999:7:::
+irc:*:19962:0:99999:7:::
+_apt:*:19962:0:99999:7:::
+nobody:*:19962:0:99999:7:::
+systemd-network:!*:19962::::::
+systemd-timesync:!*:19962::::::
+dhcpcd:!:19962::::::
+messagebus:!:19962::::::
+systemd-resolve:!*:19962::::::
+pollinate:!:19962::::::
+polkitd:!*:19962::::::
+syslog:!:19962::::::
+uuidd:!:19962::::::
+tcpdump:!:19962::::::
+tss:!:19962::::::
+landscape:!:19962::::::
+fwupd-refresh:!*:19962::::::
+usbmux:!:20004::::::
+sshd:!:20004::::::
+graphasm:$y$j9T$lDLyqZAxCXhX1EB3v01Zl.$C0XwosQvBM.5sAPbHd8oyAK0e8lg0GX5YJHb7qImQV7:20004:0:99999:7:::
+neo4j:!:20004::::::
+_laurel:!:20136::::::
+```
