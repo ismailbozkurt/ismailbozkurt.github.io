@@ -373,7 +373,7 @@ The problem is that when we overwrite RIP, we also overwrite the RBP register.
 
 
 
-![[Pasted image 20250716080336](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716080336.png)
+![Pasted image 20250716080336](/assets/images/SmileyCTF-babyrop/Pasted_image_20250716080336.png)
 
 The RBP register is located 8 bytes before the RIP register.
 The leave instruction performs two operations: `Set RSP to RBP, then pop RBP`
