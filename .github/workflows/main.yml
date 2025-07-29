@@ -6,6 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'  # ← fixed
     steps:
+      - name: Checkout repo with submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      
       - name: checkout
         uses: actions/checkout@v4
 
