@@ -1,0 +1,16 @@
+# .github/workflows/update_posts.yml
+name: Run Post Index Generator
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  update-posts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Update posts index
+        uses: ./.github/actions/update_posts
