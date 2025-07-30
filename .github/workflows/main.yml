@@ -6,16 +6,14 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'  # ← fixed
     steps:
-      - name: Checkout repo with submodules
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      
       - name: checkout
         uses: actions/checkout@v4
-
       - name: build_and_deploy
         uses: shalzz/zola-deploy-action@master
         env:
+          # Target branch
           PAGES_BRANCH: gh-pages
+          # Provide personal access token
+          # TOKEN: ${{ secrets.TOKEN }}
+          # Or if publishing to the same repo, use the automatic token
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
