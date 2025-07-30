@@ -1,6 +1,104 @@
+<!-- Only runs if .encrypted-content exists -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function showDecryptionUI(block) {
+      block.innerHTML = `<div style="padding: 1rem; border: 1px solid #444; border-radius: 8px; background: #1e1e1e;">
+  <label style="display:block; margin-bottom:0.8rem; font-weight:600; font-size:1.1rem; color:#f5f5f5;">
+    🔒 This content is password-protected:
+  </label>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <input type="password" id="decrypt-password" placeholder="Enter password"
+           style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1rem; background: #2a2a2a; color: #eee; border: 1px solid #555; border-radius: 4px;">
+    <button id="decrypt-button"
+            style="padding: 0.6rem 1rem; background: #2d2d2d; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+      Decrypt
+    </button>
+    <div style="display: flex; align-items: center;">
+      <input type="checkbox" id="show-pw" style="margin-left: 0.4rem; cursor: pointer;">
+      <label for="show-pw" title="Show password" style="margin-left: 0.4rem; font-size: 1.2rem; cursor: pointer;">👁️</label>
+    </div>
+  </div>
+  <div id="decrypt-error" style="color: #ff6b6b; margin-top: 0.75rem;"></div>
+</div>
+`;
+      var input = block.querySelector('input[type="password"]');
+      var button = block.querySelector('button');
+      var error = block.querySelector('#decrypt-error');
+      var showPw = block.querySelector('#show-pw');
+      showPw.onchange = function () {
+        input.type = this.checked ? 'text' : 'password';
+      };
+      button.onclick = function () {
+        var password = input.value;
+        var ciphertext_b64 = block.getAttribute('data-encrypted');
+        try {
+          var ciphertext = CryptoJS.enc.Base64.parse(ciphertext_b64);
+          var iv = CryptoJS.lib.WordArray.create(ciphertext.words.slice(0, 4), 16);
+          var actualCiphertext = CryptoJS.lib.WordArray.create(ciphertext.words.slice(4), ciphertext.sigBytes - 16);
+          var key = CryptoJS.SHA256(password);
+          var bytes = CryptoJS.AES.decrypt({ ciphertext: actualCiphertext }, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+          if (!plaintext) throw new Error('Incorrect password or corrupt data');
+
+          plaintext = plaintext.replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
+            const src = p1.match(/^\//) ? p1 : '/assets/images/' + p1;
+            return `![](${src})`;
+          });
+          plaintext = plaintext.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+            const href = '/' + p1.trim().replace(/\s+/g, '-').toLowerCase();
+            return `[${p1}](${href})`;
+          });
+          plaintext = plaintext.replace(/!\[\]\((data:image\/[^)]+)\)/g, (match, dataUri) => {
+            return `<img src="${dataUri}" style="max-width:100%; border-radius:8px; margin:1rem 0;">`;
+          });
+
+          if (window.marked) {
+            block.innerHTML = '<div class="post-content">' + marked.parse(plaintext) + '</div>';
+          } else {
+            block.innerHTML = '<pre>' + plaintext + '</pre>';
+            return;
+          }
+
+          // ▼▼▼ Inject TOC based on headings ▼▼▼
+          const tocContainer = document.createElement('nav');
+          tocContainer.className = 'toc';
+          const headers = block.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+          if (headers.length > 0) {
+            const tocList = document.createElement('ul');
+            headers.forEach(h => {
+              if (!h.id) {
+                h.id = h.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+              }
+              const li = document.createElement('li');
+              li.style.marginLeft = h.tagName === 'H3' ? '1.2em' : h.tagName === 'H2' ? '0.6em' : '0';
+              const a = document.createElement('a');
+              a.href = '#' + h.id;
+              a.textContent = h.textContent;
+              li.appendChild(a);
+              tocList.appendChild(li);
+            });
+            tocContainer.innerHTML = `<strong style="display:block;margin-bottom:0.5em;">▼ Table of Contents</strong>`;
+            tocContainer.appendChild(tocList);
+            block.prepend(tocContainer);
+          }
+          // ▲▲▲ TOC Injection End ▲▲▲
+
+        } catch (e) {
+          let msg = e.message?.match(/utf-?8/i) ? 'Decryption failed' : '❌ ' + (e.message || 'Incorrect password or corrupt data');
+          error.textContent = msg;
+          error.style.display = 'block';
+        }
+      };
+    }
+
+    document.querySelectorAll('.encrypted-content').forEach(showDecryptionUI);
+  });
+</script>
+
 <!-- Share page -->
 <br>
-
 <div class="robots-nocontent social-share-buttons">
   <b>Share this content</b>
   <br>
