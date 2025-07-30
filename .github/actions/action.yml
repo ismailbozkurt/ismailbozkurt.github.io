@@ -1,38 +1,13 @@
-name: Update Posts Index
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  update-posts:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
-
-      - name: Run generate_posts.py
-        run: python .github/actions/app/generate_posts.py
-
-      - name: Commit and push changes  
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Stage the file
-          git add content/pages/posts.md
-
-          # Only commit if there are changes
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update posts index"
-
-          # Authenticated push
-          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} HEAD:main
+name: Comment Docs Preview in PR
+description: Comment with the docs URL preview in the PR
+author: Sebastián Ramírez <tiangolo@gmail.com>
+inputs:
+  token:
+    description: Token for the repo. Can be passed in using {{ secrets.GITHUB_TOKEN }}
+    required: true
+  deploy_url:
+    description: The deployment URL to comment in the PR
+    required: true
+runs:
+  using: docker
+  image: Dockerfile
