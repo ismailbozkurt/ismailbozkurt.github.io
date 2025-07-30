@@ -78,6 +78,10 @@ url = "$BASE_URL/posts"
 name = "About"
 url = "$BASE_URL/about"
 
+[[extra.menu]]
+name = "Note2Myself"
+url = "$BASE_URL/n2myself"
+
 # The page footer options.
 [extra.footer]
 since = 2017
