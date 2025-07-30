@@ -1,4 +1,4 @@
-<!-- Only runs if .encrypted-content exists -->
+
 <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
 <script>
   mediumZoom('img:not(.no-zoom)', {
@@ -7,7 +7,7 @@
     scrollOffset: 40,
   });
 </script>
-
+<!-- Only runs if .encrypted-content exists -->
 <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
@@ -69,6 +69,12 @@
             block.innerHTML = '<pre>' + plaintext + '</pre>';
             return;
           }
+          
+          mediumZoom('img:not(.no-zoom)', {
+          margin: 24,
+          background: 'rgba(0, 0, 0, 0.9)',
+          scrollOffset: 40,
+          });
 
           // ▼▼▼ Inject TOC based on headings ▼▼▼
           const tocContainer = document.createElement('nav');
