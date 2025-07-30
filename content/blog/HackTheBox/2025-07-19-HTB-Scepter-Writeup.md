@@ -1,7 +1,7 @@
 +++
-title= "HTB Scepter Writeup"
+title= "HackTheBox Scepter Writeup"
 date= "2025-07-19"
-categories= ["Writeup", "HackTheBox"]
+categories= ["Writeup", "HackTheBox", "ActiveDirectory"]
 tags= ["HackTheBox", "HTB", "ADCS-ESC14A", "ADCS-ESC9A", "ForceChangePassword", "genericAll", "DACL-Abuse", "active-directory-exploitation", "ad-exploitation", "ADCS"]
 description= "The Scepter (Windows - Hard) Box from Hackthebox. Including ADCS ESC9A and ADCS ESC14A abuse with DACL abuse"
 image= "/images/HackTheBox/HTB-Scepter/Pasted_image_20250718054233.png"
