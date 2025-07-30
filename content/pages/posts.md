@@ -9,7 +9,9 @@ sort_by="date"
 
 - [Docker For Binaryexploitation](/blog/docker-for-binaryexploitation/)
 - [Htb Scepter Writeup](/blog/HackTheBox/htb-scepter-writeup/)
+- [Htb Mirage](/blog/HackTheBox/htb-mirage/)
 - [Htb Cypher](/blog/HackTheBox/htb-cypher/)
+- [Htb Era](/blog/HackTheBox/htb-era/)
 - [Smileyctf_Easycomeeasygo](/blog/SmileyCTF/smileyctf_easycomeeasygo/)
 - [Smileyctf_Babyrop](/blog/SmileyCTF/smileyctf_babyrop/)
 - [Smileyctf_Babyrop2](/blog/SmileyCTF/smileyctf_babyrop2/)
