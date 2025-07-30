@@ -8,6 +8,15 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run Python script (generate_posts.py)
+        run: python .github/scripts/generate_posts.py
+
       - name: build_and_deploy
         uses: shalzz/zola-deploy-action@master
         env:
