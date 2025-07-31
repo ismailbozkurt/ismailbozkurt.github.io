@@ -1,0 +1,1 @@
+![No zoom](image.png){ .no-zoom }  --> if you want to not to zoom an image.
