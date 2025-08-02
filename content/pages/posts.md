@@ -17,6 +17,7 @@ sort_by="date"
 - [Htb Sorcery](/blog/HackTheBox/htb-sorcery/)
 - [Htb Voleur](/blog/HackTheBox/htb-voleur/)
 - [Htb Era](/blog/HackTheBox/htb-era/)
+- [Htb Code](/blog/HackTheBox/htb-code/)
 - [Smileyctf Easycomeeasygo](/blog/SmileyCTF/smileyctf-easycomeeasygo/)
 - [Smileyctf Babyrop](/blog/SmileyCTF/smileyctf-babyrop/)
 - [Smileyctf Babyrop2](/blog/SmileyCTF/smileyctf-babyrop2/)
