@@ -20,6 +20,7 @@ sort_by="date"
 - [Htb Code](/blog/HackTheBox/htb-code/)
 - [Htb Certificate](/blog/HackTheBox/htb-certificate/)
 - [Htb Editor](/blog/HackTheBox/htb-editor/)
+- [Htb Tombwatcher](/blog/HackTheBox/htb-tombwatcher/)
 - [Smileyctf Easycomeeasygo](/blog/SmileyCTF/smileyctf-easycomeeasygo/)
 - [Smileyctf Babyrop](/blog/SmileyCTF/smileyctf-babyrop/)
 - [Smileyctf Babyrop2](/blog/SmileyCTF/smileyctf-babyrop2/)
