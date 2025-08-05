@@ -1,7 +1,6 @@
 +++
 title = "HackTheBox TombWatcher Writeup"
 date = 2025-08-04
-updated = 2025-08-04
 categories = ["Writeup", "HackTheBox", "ActiveDirectory"]
 tags = [
     "HackTheBox",
