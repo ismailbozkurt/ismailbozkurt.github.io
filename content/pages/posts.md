@@ -21,6 +21,7 @@ sort_by="date"
 - [Htb Certificate](/blog/HackTheBox/htb-certificate/)
 - [Htb Editor](/blog/HackTheBox/htb-editor/)
 - [Htb Tombwatcher](/blog/HackTheBox/htb-tombwatcher/)
+- [Htb Puppy](/blog/HackTheBox/htb-puppy/)
 - [Smileyctf Easycomeeasygo](/blog/SmileyCTF/smileyctf-easycomeeasygo/)
 - [Smileyctf Babyrop](/blog/SmileyCTF/smileyctf-babyrop/)
 - [Smileyctf Babyrop2](/blog/SmileyCTF/smileyctf-babyrop2/)
