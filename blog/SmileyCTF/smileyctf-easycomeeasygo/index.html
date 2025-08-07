@@ -1,0 +1,1109 @@
+<!doctype html>
+<html class="not-ready lg:text-base overflow-y-scroll scroll-pt-14" lang="en">
+
+<head prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="generator" content="Zola v0.21.0" />
+  <title>SmileyCTF EasyComeEasyGO - Go Reverse Challange | Dreamer</title>
+  <meta property="og:site_name" content="Dreamer" />
+  <meta property="og:title" content="SmileyCTF EasyComeEasyGO - Go Reverse Challange" />
+  <meta name="description" content="Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation." />
+  <meta property="og:description" content="Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation." />
+  <meta property="og:url" content="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/" />
+  <link rel="canonical" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/" />
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2025-06-01T00:00:00+00:00" />
+  <meta property="og:image" content="https://ismailbozkurt.github.io/images/SmileyCTF/SmileyCTF-Babyrop-2/smileyCTF_pic.png" />
+  <meta property="og:image:alt" content="Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation." />
+  <meta property="og:image:width" content="645" />
+  <meta property="og:image:height" content="147" />
+  <meta property="og:image:type" content="image/png" />
+  <link rel="alternate" type="application/atom+xml" href="https://ismailbozkurt.github.io/atom.xml" title="Dreamer | Atom" />
+  <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed" />
+  <!-- Begin Head inject -->
+  
+  <!-- End Head inject -->
+  <link rel="stylesheet" href="https://ismailbozkurt.github.io/main.min.css?h=2e89f7f30f1019877d14" />
+  <style>
+  :root{--bg: #f4f4f5; --header: #e4e4e7; color-scheme: light;}
+  :root.dark{--bg: #18181b; --header: #27272a; color-scheme: dark;}
+  </style>
+  <meta name="theme-color" data-light="#e4e4e7" data-dark="#27272a" content="#e4e4e7" />
+  <link rel="icon" type="image/x-icon" sizes="16x16" href="https://ismailbozkurt.github.io/favicon.ico" />
+  <link rel="apple-touch-icon" type="image/png" href="https://ismailbozkurt.github.io/apple-touch-icon.png?h=58bee300054c5308feb3" />
+  <link rel="icon" type="image/png" href="https://ismailbozkurt.github.io/android-icon.png?h=8d80ec95446bd2c36826" />
+  <script src="https://ismailbozkurt.github.io/js/linkita.min.js?h=1dd3ed42fc674277bc34"></script>
+  <script src="https://ismailbozkurt.github.io/js/linkita-search.min.js?h=698547b4b081d012c661"></script>
+  <!-- Begin Head End inject -->
+  <!-- Umami analytics -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="3da49f88-7825-49a6-b9cf-de0c7610e7dc"></script>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="https://ismailbozkurt.github.io/files/custom.css">
+
+<!-- HEAD END -->
+
+  <!-- End Head End inject -->
+</head>
+
+<body class="text-black duration-100 ease-out bg-[var(--bg)] dark:text-white">
+  <!-- Header -->
+<header class="bg-[var(--header)] fixed top-0 z-40 mx-auto min-h-[3.25rem] w-full header-icons">
+  <div class="mx-auto w-full max-w-4xl p-2.5 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center min-h-8">
+        <a title="Go to home page" accesskey="!"
+          href="https://ismailbozkurt.github.io/" class="text-2xl font-semibold">Dreamer</a>
+        <button type="button" title="Switch color scheme" accesskey="$"
+          onclick="window.linkita.toggleDarkMode();" ondblclick="window.linkita.resetDarkMode();"
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover dark:invert [background-image:var(--icon-theme-dark)] dark:[background-image:var(--icon-theme-light)]"
+        ></button>
+        <button type="button" title="Search" accesskey="/"
+          onclick="window.linkita.toggleSearch();"
+          class="btn-search ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover [background-image:var(--icon-search)] dark:invert"
+        ></button>
+        <script>window.linkita.initSearchButton({ scripts: ["https://ismailbozkurt.github.io/elasticlunr.min.js", "https://ismailbozkurt.github.io/search_index.en.js"] });</script>
+      </div>
+      <div title="Menu" role="button" accesskey="+" tabindex="0"
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        onclick="window.linkita.toggleHeaderMenu();"
+        onkeydown="(event.keyCode == 13 || event.keyCode == 32) ? event.preventDefault() || window.linkita.toggleHeaderMenu() : true;"
+      ></div>
+    </div>
+    <nav class="flex w-full items-center lg:w-auto">
+      <menu
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0">
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/infosec_notes"
+          >Infosec-Notes</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/posts"
+          >Posts</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/about"
+          >About</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/n2myself"
+          >Note2Myself</a>
+        </li>
+      </menu>
+      <!-- Begin Header Nav inject -->
+      
+      <!-- End Header Nav inject -->
+    </nav>
+  </div>
+</header>
+
+  <!-- Begin Body Start inject -->
+  
+  <!-- End Body Start inject -->
+  <main class="prose prose-neutral relative mx-auto min-h-[calc(100%-4rem)]
+    max-w-3xl break-words px-4 pb-12 pt-28 lg:pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg">
+      <!-- Search -->
+<div id="linkita-search-wrapper" class="hidden">
+  <ul id="linkita-search-results"></ul>
+</div>
+
+    
+<article>
+  <!-- Begin Page Start inject -->
+  
+  <!-- End Page Start inject -->
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">SmileyCTF EasyComeEasyGO - Go Reverse Challange</h1>
+    <!-- Page Info -->
+<div class="text-sm antialiased opacity-80"><time
+      datetime="2025-06-01T00:00:00+00:00">2025-06-01</time><span
+        class="middot"></span><time
+    datetime="PT0H1M0S">1&nbsp;min</time><span
+      class="middot"></span>
+</div>
+
+  </header>
+  <figure class="mb-12 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="https://ismailbozkurt.github.io/images/SmileyCTF/SmileyCTF-Babyrop-2/smileyCTF_pic.png"
+      alt="Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation."
+      width="645"
+      height="147"
+    />
+  </figure>
+  <!-- TOC -->
+<div class="block-bg mb-12 rounded-lg p-2 text-lg">
+  <details>
+    <summary class="select-none py-0.5 lg:py-1 pl-4" accesskey="=">
+      <span class="cursor-pointer">Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#challange-binary-chal">Challange binary - chal</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#binary-analysis">Binary Analysis</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#main-main-func3">main.main.func3</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#main-main-func1">main.main.func1</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#main-main-func2">main.main.func2</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#the-resolve-script">The Resolve Script</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-easycomeeasygo/#my-original-code">My Original Code</a>
+        </li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+  <!-- Content -->
+  <section><h1 id="challange-binary-chal">Challange binary - chal</h1>
+<h2 id="binary-analysis">Binary Analysis</h2>
+<p><code>main function</code></p>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span style="color:#bf616a;">void main</span><span>.</span><span style="color:#bf616a;">main</span><span>(</span><span style="color:#bf616a;">void</span><span>)
+</span><span>
+</span><span>{
+</span><span>  
+</span><span>  ...
+</span><span>  ...
+</span><span>  ...
+</span><span>  </span><span style="color:#bf616a;">USER_INPUT </span><span>= </span><span style="color:#bf616a;">extraout_RAX_04</span><span>;
+</span><span>
+</span><span style="color:#65737e;">// print &quot;&gt;&quot;
+</span><span style="color:#bf616a;">fmt</span><span>.</span><span style="color:#bf616a;">Fprint</span><span>(</span><span style="color:#b48ead;">go</span><span>:</span><span style="color:#bf616a;">itab</span><span>.*</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File</span><span>,</span><span style="color:#bf616a;">io</span><span>.</span><span style="color:#bf616a;">Writer</span><span>,</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdout</span><span>,&amp;</span><span style="color:#bf616a;">local_20</span><span>,</span><span style="color:#d08770;">1</span><span>,</span><span style="color:#d08770;">1</span><span>);
+</span><span>  </span><span style="color:#bf616a;">poVar3 </span><span>= (</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">file </span><span>*)</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdin</span><span>;
+</span><span>                    </span><span style="color:#65737e;">/* ./chal.go:17 */
+</span><span>  </span><span style="color:#bf616a;">readed_string </span><span>= &amp;</span><span style="color:#bf616a;">datatype</span><span>.</span><span style="color:#bf616a;">Ptr</span><span>.*[]</span><span style="color:#b48ead;">uint8</span><span>;
+</span><span>  </span><span style="color:#bf616a;">local_28 </span><span>= </span><span style="color:#bf616a;">USER_INPUT</span><span>;
+</span><span>                    </span><span style="color:#65737e;">/* fmt/scan.go:81 */
+</span><span>  </span><span style="color:#bf616a;">pcVar2 </span><span>= &quot;</span><span style="color:#d08770;">%s</span><span>&quot;;
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span style="color:#65737e;">// taking input here.
+</span><span style="color:#bf616a;">fmt</span><span>.</span><span style="color:#bf616a;">Fscanf</span><span>(</span><span style="color:#b48ead;">go</span><span>:</span><span style="color:#bf616a;">itab</span><span>.*</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File</span><span>,</span><span style="color:#bf616a;">io</span><span>.</span><span style="color:#bf616a;">Reader</span><span>,</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdin</span><span>,&quot;</span><span style="color:#d08770;">%s</span><span>&quot;,</span><span style="color:#d08770;">2</span><span>,&amp;</span><span style="color:#bf616a;">readed_string</span><span>,</span><span style="color:#d08770;">1</span><span>,</span><span style="color:#d08770;">1</span><span>);
+</span><span>     </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">poVar3 </span><span>== (</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">file </span><span>*)</span><span style="color:#d08770;">0x0</span><span>) {
+</span><span>                    </span><span style="color:#65737e;">/* ./chal.go:23 */
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(*(</span><span style="color:#bf616a;">long </span><span>*)(</span><span style="color:#bf616a;">USER_INPUT </span><span>+ </span><span style="color:#d08770;">8</span><span>) != </span><span style="color:#d08770;">0x18</span><span>) {
+</span><span>      </span><span style="color:#bf616a;">local_60 </span><span>= &amp;</span><span style="color:#bf616a;">datatype</span><span>.</span><span style="color:#bf616a;">String</span><span>.</span><span style="color:#bf616a;">string</span><span>;
+</span><span>      </span><span style="color:#bf616a;">local_58 </span><span>= &amp;</span><span style="color:#bf616a;">incorrent_string</span><span>;
+</span><span>      </span><span style="color:#bf616a;">fmt</span><span>.</span><span style="color:#bf616a;">Fprintln</span><span>(</span><span style="color:#b48ead;">go</span><span>:</span><span style="color:#bf616a;">itab</span><span>.*</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File</span><span>,</span><span style="color:#bf616a;">io</span><span>.</span><span style="color:#bf616a;">Writer</span><span>,</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdout</span><span>,&amp;</span><span style="color:#bf616a;">local_60</span><span>,</span><span style="color:#d08770;">1</span><span>,</span><span style="color:#d08770;">1</span><span>);
+</span><span>                    </span><span style="color:#65737e;">/* ./chal.go:25 */
+</span><span>      </span><span style="color:#b48ead;">return</span><span>;
+</span><span>    }
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>	</span><span style="color:#65737e;">// // FUNC1: this one is the created channels. one for receive and one for send.
+</span><span>                    </span><span style="color:#65737e;">/* ./chal.go:29 */
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">newobject</span><span>(&amp;</span><span style="color:#bf616a;">DAT_004b5bc0</span><span>);
+</span><span>    *</span><span style="color:#bf616a;">ret_func1 </span><span>= </span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">func1</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1 </span><span>= </span><span style="color:#bf616a;">ret_func1</span><span>;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">writeBarrier</span><span>.</span><span style="color:#bf616a;">_0_4_ </span><span>!= </span><span style="color:#d08770;">0</span><span>) {
+</span><span>      </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">gcWriteBarrier2</span><span>();
+</span><span>      *</span><span style="color:#bf616a;">in_R11 </span><span>= </span><span style="color:#bf616a;">local_88</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">1</span><span>] = </span><span style="color:#bf616a;">local_98</span><span>;
+</span><span>      </span><span style="color:#bf616a;">puVar1 </span><span>= </span><span style="color:#bf616a;">extraout_RAX_05</span><span>;
+</span><span>    }
+</span><span>
+</span><span>	</span><span style="color:#65737e;">// FUNC2: this one is the created channels. one for receive and one for send.
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">1</span><span>] = </span><span style="color:#bf616a;">local_88</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">2</span><span>] = </span><span style="color:#bf616a;">local_98</span><span>;
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">newproc</span><span>(</span><span style="color:#bf616a;">puVar1</span><span>);
+</span><span>                    </span><span style="color:#65737e;">/* ./chal.go:45 */
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">newobject</span><span>(&amp;</span><span style="color:#bf616a;">DAT_004b5c60</span><span>);
+</span><span>    *</span><span style="color:#bf616a;">ret_func2 </span><span>= </span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">func2</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1 </span><span>= </span><span style="color:#bf616a;">ret_func2</span><span>;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">writeBarrier</span><span>.</span><span style="color:#bf616a;">_0_4_ </span><span>!= </span><span style="color:#d08770;">0</span><span>) {
+</span><span>      </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">gcWriteBarrier2</span><span>();
+</span><span>      *</span><span style="color:#bf616a;">in_R11 </span><span>= </span><span style="color:#bf616a;">local_90</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">1</span><span>] = </span><span style="color:#bf616a;">local_a0</span><span>;
+</span><span>      </span><span style="color:#bf616a;">puVar1 </span><span>= </span><span style="color:#bf616a;">extraout_RAX_06</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">1</span><span>] = </span><span style="color:#bf616a;">local_90</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">2</span><span>] = </span><span style="color:#bf616a;">local_a0</span><span>;
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">newproc</span><span>(</span><span style="color:#bf616a;">puVar1</span><span>);
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>	</span><span style="color:#65737e;">// FUNC3: this one is the decompiler addition to main.main.func3. giving channels and the user input.
+</span><span>	
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">newobject</span><span>(&amp;</span><span style="color:#bf616a;">DAT_004bb720</span><span>);
+</span><span>    *</span><span style="color:#bf616a;">ret_func3 </span><span>= </span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">func3</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1 </span><span>= </span><span style="color:#bf616a;">ret_func3</span><span>;
+</span><span>
+</span><span>	</span><span style="color:#65737e;">// This is go garbage collector think i believe, 
+</span><span>	</span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">writeBarrier</span><span>.</span><span style="color:#bf616a;">_0_4_ </span><span>!= </span><span style="color:#d08770;">0</span><span>) {
+</span><span>      </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">gcWriteBarrier6</span><span>();
+</span><span>      *</span><span style="color:#bf616a;">in_R11 </span><span>= </span><span style="color:#bf616a;">USER_INPUT</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">1</span><span>] = </span><span style="color:#bf616a;">local_88</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">2</span><span>] = </span><span style="color:#bf616a;">local_98</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">3</span><span>] = </span><span style="color:#bf616a;">local_90</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">4</span><span>] = </span><span style="color:#bf616a;">local_a0</span><span>;
+</span><span>      </span><span style="color:#bf616a;">in_R11</span><span>[</span><span style="color:#d08770;">5</span><span>] = </span><span style="color:#bf616a;">local_a8</span><span>;
+</span><span>      </span><span style="color:#bf616a;">puVar1 </span><span>= </span><span style="color:#bf616a;">extraout_RAX_07</span><span>;
+</span><span>    }
+</span><span>
+</span><span>	</span><span style="color:#65737e;">// these are the channel informations and user input to main.main.func3.
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">1</span><span>] = </span><span style="color:#bf616a;">USER_INPUT</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">2</span><span>] = </span><span style="color:#bf616a;">local_88</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">3</span><span>] = </span><span style="color:#bf616a;">local_98</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">4</span><span>] = </span><span style="color:#bf616a;">local_90</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">5</span><span>] = </span><span style="color:#bf616a;">local_a0</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar1</span><span>[</span><span style="color:#d08770;">6</span><span>] = </span><span style="color:#bf616a;">local_a8</span><span>;
+</span><span>    
+</span><span>	</span><span style="color:#65737e;">// Here we are starting the execution main.main.func3
+</span><span>	</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">newproc</span><span>(</span><span style="color:#bf616a;">puVar1</span><span>);
+</span><span>    
+</span><span>	</span><span style="color:#bf616a;">null_byte </span><span>= </span><span style="color:#d08770;">&#39;</span><span style="color:#96b5b4;">\0</span><span style="color:#d08770;">&#39;</span><span>;
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chanrecv1</span><span>(</span><span style="color:#bf616a;">local_a8</span><span>,&amp;</span><span style="color:#bf616a;">null_byte</span><span>);
+</span><span>    
+</span><span>	</span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">null_byte </span><span>== </span><span style="color:#d08770;">&#39;</span><span style="color:#96b5b4;">\0</span><span style="color:#d08770;">&#39;</span><span>) {
+</span><span>      </span><span style="color:#bf616a;">local_80 </span><span>= &amp;</span><span style="color:#bf616a;">datatype</span><span>.</span><span style="color:#bf616a;">String</span><span>.</span><span style="color:#bf616a;">string</span><span>;
+</span><span>      </span><span style="color:#bf616a;">local_78 </span><span>= &amp;</span><span style="color:#bf616a;">incorrent_string</span><span>;
+</span><span>    
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>	</span><span style="color:#65737e;">// Here we control the output of the main.main.func3. If everything goes well, gives correct. if panic called, gives incorrect.
+</span><span>	  </span><span style="color:#bf616a;">fmt</span><span>.</span><span style="color:#bf616a;">Fprintln</span><span>(</span><span style="color:#b48ead;">go</span><span>:</span><span style="color:#bf616a;">itab</span><span>.*</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File</span><span>,</span><span style="color:#bf616a;">io</span><span>.</span><span style="color:#bf616a;">Writer</span><span>,</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdout</span><span>,&amp;</span><span style="color:#bf616a;">local_80</span><span>,</span><span style="color:#d08770;">1</span><span>,</span><span style="color:#d08770;">1</span><span>);
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">else </span><span>{
+</span><span>      </span><span style="color:#bf616a;">local_70 </span><span>= &amp;</span><span style="color:#bf616a;">datatype</span><span>.</span><span style="color:#bf616a;">String</span><span>.</span><span style="color:#bf616a;">string</span><span>;
+</span><span>      </span><span style="color:#bf616a;">local_68 </span><span>= &amp;</span><span style="color:#bf616a;">CORRECT_string</span><span>;
+</span><span>      </span><span style="color:#bf616a;">fmt</span><span>.</span><span style="color:#bf616a;">Fprintln</span><span>(</span><span style="color:#b48ead;">go</span><span>:</span><span style="color:#bf616a;">itab</span><span>.*</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File</span><span>,</span><span style="color:#bf616a;">io</span><span>.</span><span style="color:#bf616a;">Writer</span><span>,</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdout</span><span>,&amp;</span><span style="color:#bf616a;">local_70</span><span>,</span><span style="color:#d08770;">1</span><span>,</span><span style="color:#d08770;">1</span><span>);
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">return</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">local_50 </span><span>= &amp;</span><span style="color:#bf616a;">datatype</span><span>.</span><span style="color:#bf616a;">String</span><span>.</span><span style="color:#bf616a;">string</span><span>;
+</span><span>  </span><span style="color:#bf616a;">ppuStack_48 </span><span>= &amp;</span><span style="color:#bf616a;">goss_err</span><span>:</span><span style="color:#bf616a;">__4eb180</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">poVar3 </span><span>!= (</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">file </span><span>*)</span><span style="color:#d08770;">0x0</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">poVar3 </span><span>= ((</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">poVar3 </span><span>+ </span><span style="color:#d08770;">8</span><span>))-&gt;</span><span style="color:#bf616a;">file</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#bf616a;">local_40 </span><span>= </span><span style="color:#bf616a;">poVar3</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pcStack_38 </span><span>= </span><span style="color:#bf616a;">pcVar2</span><span>;
+</span><span>  </span><span style="color:#bf616a;">fmt</span><span>.</span><span style="color:#bf616a;">Fprintln</span><span>(</span><span style="color:#b48ead;">go</span><span>:</span><span style="color:#bf616a;">itab</span><span>.*</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">File</span><span>,</span><span style="color:#bf616a;">io</span><span>.</span><span style="color:#bf616a;">Writer</span><span>,</span><span style="color:#bf616a;">os</span><span>.</span><span style="color:#bf616a;">Stdout</span><span>,&amp;</span><span style="color:#bf616a;">local_50</span><span>,</span><span style="color:#d08770;">2</span><span>,</span><span style="color:#d08770;">2</span><span>);
+</span><span>  </span><span style="color:#b48ead;">return</span><span>;
+</span><span>}
+</span></code></pre>
+<h2 id="main-main-func3">main.main.func3</h2>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span style="color:#65737e;">// Function: main.main.func3 (The Validator and Orchestrator)
+</span><span style="color:#65737e;">// This function runs as a Go Goroutine and is the central piece for flag validation.
+</span><span style="color:#65737e;">// It interacts with func1 (to get leaked/processed data) and func2 (to perform XOR transformations).
+</span><span style="color:#65737e;">// It loads hardcoded permutation and expected values.
+</span><span style="color:#65737e;">// Its core logic involves a sequence of channel receives/sends, XOR operations,
+</span><span style="color:#65737e;">// and a final comparison to determine if the provided input (the flag candidate) is correct.
+</span><span>
+</span><span style="color:#bf616a;">void main</span><span>.</span><span style="color:#bf616a;">main</span><span>.</span><span style="color:#bf616a;">func3</span><span>(
+</span><span>    </span><span style="color:#65737e;">// Parameters: (Pointers to Go channels and the user input slice)
+</span><span>    </span><span style="color:#65737e;">// These are passed via the Goroutine&#39;s closure context by the Go runtime.
+</span><span>    </span><span style="color:#65737e;">// They represent the communication channels and the flag candidate.
+</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#65737e;">// --- Prologue and Stack Setup ---
+</span><span>    </span><span style="color:#65737e;">// (Typical Go runtime boilerplate for stack validation and setup.
+</span><span>    </span><span style="color:#65737e;">//  Decompiler adds temporary variable declarations and register manipulations.)
+</span><span>    </span><span style="color:#65737e;">// (Your comment on func1&#39;s prologue: &quot;Above code is just the prologue, decompiler additions.&quot;)
+</span><span>    </span><span style="color:#65737e;">// Similar boilerplate exists here for func3.
+</span><span>    </span><span style="color:#65737e;">// Variables like puVar5, puVar6, plVar2, uVar3, uVar8, lVar9, lVar7, unaff_R14
+</span><span>    </span><span style="color:#65737e;">// are involved in handling function arguments and stack frame setup.
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// --- Hardcoded Data Initialization ---
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 1. Hardcoded Permutation Map Initialization (24 QWORDs, each holding an index from 0 to 23)
+</span><span>    </span><span style="color:#65737e;">// These values are loaded onto the Goroutine&#39;s stack at specific offsets.
+</span><span>    </span><span style="color:#65737e;">// This map defines the reordering or permutation of bytes during the validation.
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x100</span><span>) = </span><span style="color:#d08770;">0x15</span><span>; </span><span style="color:#65737e;">// Index 0 maps to 21
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xf8</span><span>) = </span><span style="color:#d08770;">0x17</span><span>;  </span><span style="color:#65737e;">// Index 1 maps to 23
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xf0</span><span>) = </span><span style="color:#d08770;">0x1</span><span>;   </span><span style="color:#65737e;">// Index 2 maps to 1
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xe8</span><span>) = </span><span style="color:#d08770;">0x3</span><span>;   </span><span style="color:#65737e;">// Index 3 maps to 3
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xe0</span><span>) = </span><span style="color:#d08770;">0xe</span><span>;   </span><span style="color:#65737e;">// Index 4 maps to 14
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xd8</span><span>) = </span><span style="color:#d08770;">0x12</span><span>;  </span><span style="color:#65737e;">// Index 5 maps to 18
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xd0</span><span>) = </span><span style="color:#d08770;">0xd</span><span>;   </span><span style="color:#65737e;">// Index 6 maps to 13
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">200</span><span>) = </span><span style="color:#d08770;">0x0</span><span>;   </span><span style="color:#65737e;">// Index 7 maps to 0 (Note: -200 is -0xC8)
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xc0</span><span>) = </span><span style="color:#d08770;">0x14</span><span>;  </span><span style="color:#65737e;">// Index 8 maps to 20
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xb8</span><span>) = </span><span style="color:#d08770;">0xa</span><span>;   </span><span style="color:#65737e;">// Index 9 maps to 10
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xb0</span><span>) = </span><span style="color:#d08770;">0x6</span><span>;   </span><span style="color:#65737e;">// Index 10 maps to 6
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xa8</span><span>) = </span><span style="color:#d08770;">0xb</span><span>;   </span><span style="color:#65737e;">// Index 11 maps to 11
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0xa0</span><span>) = </span><span style="color:#d08770;">0x11</span><span>;  </span><span style="color:#65737e;">// Index 12 maps to 17
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x98</span><span>) = </span><span style="color:#d08770;">0x2</span><span>;   </span><span style="color:#65737e;">// Index 13 maps to 2
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x90</span><span>) = </span><span style="color:#d08770;">0xf</span><span>;   </span><span style="color:#65737e;">// Index 14 maps to 15
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x88</span><span>) = </span><span style="color:#d08770;">0x8</span><span>;   </span><span style="color:#65737e;">// Index 15 maps to 8
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x80</span><span>) = </span><span style="color:#d08770;">0x9</span><span>;   </span><span style="color:#65737e;">// Index 16 maps to 9
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x78</span><span>) = </span><span style="color:#d08770;">0xc</span><span>;   </span><span style="color:#65737e;">// Index 17 maps to 12
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x70</span><span>) = </span><span style="color:#d08770;">0x10</span><span>;  </span><span style="color:#65737e;">// Index 18 maps to 16
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x68</span><span>) = </span><span style="color:#d08770;">0x4</span><span>;   </span><span style="color:#65737e;">// Index 19 maps to 4
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x60</span><span>) = </span><span style="color:#d08770;">0x16</span><span>;  </span><span style="color:#65737e;">// Index 20 maps to 22
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x58</span><span>) = </span><span style="color:#d08770;">0x7</span><span>;   </span><span style="color:#65737e;">// Index 21 maps to 7
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x50</span><span>) = </span><span style="color:#d08770;">0x5</span><span>;   </span><span style="color:#65737e;">// Index 22 maps to 5
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x48</span><span>) = </span><span style="color:#d08770;">0x13</span><span>;  </span><span style="color:#65737e;">// Index 23 maps to 19
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// 2. Hardcoded Expected Value Array Initialization (3 QWORDs, total 24 bytes)
+</span><span>    </span><span style="color:#65737e;">// This is the target value that the transformed input must match for validation to pass.
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x120</span><span>) = </span><span style="color:#d08770;">0x58c4d6920d33ef5c</span><span>;
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x118</span><span>) = </span><span style="color:#d08770;">0x77250476f61923ac</span><span>;
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x110</span><span>) = </span><span style="color:#d08770;">0xf5903c93901fdbd0</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// --- User Input (Flag Candidate) Handling ---
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Get pointer and length of the user-provided input slice (flag candidate).
+</span><span>    </span><span style="color:#bf616a;">lVar9 </span><span>= *</span><span style="color:#bf616a;">plVar2</span><span>;   </span><span style="color:#65737e;">// Base address of the user input byte array
+</span><span>    </span><span style="color:#bf616a;">lVar7 </span><span>= </span><span style="color:#bf616a;">plVar2</span><span>[</span><span style="color:#d08770;">1</span><span>]; </span><span style="color:#65737e;">// Length of the user input byte array (expected to be 24)
+</span><span>    </span><span style="color:#65737e;">// These values are stored on the stack for later use within the loop.
+</span><span>    *(</span><span style="color:#bf616a;">long </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x10</span><span>) = </span><span style="color:#bf616a;">lVar9</span><span>; </span><span style="color:#65737e;">// User input array pointer
+</span><span>    *(</span><span style="color:#bf616a;">long </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x40</span><span>) = </span><span style="color:#bf616a;">lVar7</span><span>; </span><span style="color:#65737e;">// User input array length
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">ulong current_index </span><span>= </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#65737e;">// Initialize loop counter (current byte index, starts at 0)
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// --- Main Validation Loop (Iterates 24 times for each byte of the input) ---
+</span><span>    </span><span style="color:#bf616a;">while </span><span>(</span><span style="color:#d08770;">true</span><span>) {
+</span><span>        </span><span style="color:#65737e;">// 1. Loop Termination Condition (Input Length Check)
+</span><span>        </span><span style="color:#65737e;">// If the current_index is equal to or exceeds the input length (lVar7),
+</span><span>        </span><span style="color:#65737e;">// it means all bytes have been processed. If no mismatches occurred, validation succeeds.
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">lVar7 </span><span>&lt;= (</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">current_index</span><span>) {
+</span><span>            </span><span style="color:#65737e;">// Send success signal via a channel and return from the function.
+</span><span>            </span><span style="color:#65737e;">// This is the success path of the flag validation.
+</span><span>            *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f0a6</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>            </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(</span><span style="color:#bf616a;">uVar3</span><span>,&amp;</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">gcbits</span><span>.*); </span><span style="color:#65737e;">// uVar3 is pointer to the success channel
+</span><span>            </span><span style="color:#b48ead;">return</span><span>;
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 2. Get Current Byte from User Input
+</span><span>        </span><span style="color:#65737e;">// Read the byte at the current_index from the user&#39;s input string.
+</span><span>        </span><span style="color:#bf616a;">uVar1 </span><span>= *(</span><span style="color:#bf616a;">undefined1 </span><span>*)(</span><span style="color:#bf616a;">lVar9 </span><span>+ </span><span style="color:#bf616a;">current_index</span><span>); </span><span style="color:#65737e;">// lVar9: user input base address
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 3. Early Exit / Panic for Invalid Index (Index out of bounds for the 24-byte block)
+</span><span>        </span><span style="color:#65737e;">// If the current_index exceeds 23 (i.e., is 24 or more),
+</span><span>        </span><span style="color:#65737e;">// it means an unexpected index was somehow reached within the 24-byte block logic.
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#d08770;">0x17 </span><span>&lt; </span><span style="color:#bf616a;">current_index</span><span>) </span><span style="color:#b48ead;">break</span><span>; </span><span style="color:#65737e;">// If current_index &gt; 23, jump to panic block
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// Store current_index and current_user_input_byte on stack for operations.
+</span><span>        *(</span><span style="color:#bf616a;">ulong </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x108</span><span>) = </span><span style="color:#bf616a;">current_index</span><span>;
+</span><span>        *(</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x122</span><span>) = </span><span style="color:#bf616a;">uVar1</span><span>; </span><span style="color:#65737e;">// Stores the current user input byte
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 4. Interaction with func1: Request and Receive Data (First XOR Operand)
+</span><span>        </span><span style="color:#65737e;">// Send a specific value (derived from the permutation map based on current_index)
+</span><span>        </span><span style="color:#65737e;">// to func1&#39;s input channel. func1 will return a byte from its hardcoded data.
+</span><span>        *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f015</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(</span><span style="color:#bf616a;">uVar8</span><span>,(</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ </span><span style="color:#bf616a;">current_index </span><span>* </span><span style="color:#d08770;">8 </span><span>+ -</span><span style="color:#d08770;">0x100</span><span>)); </span><span style="color:#65737e;">// uVar8 is func1&#39;s request channel. The data sent is a value from the perm_map.
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// Receive the byte leaked/processed by func1 from its output channel.
+</span><span>        </span><span style="color:#65737e;">// This is the first operand for the initial XOR.
+</span><span>        </span><span style="color:#65737e;">// Your observation implies this is where the &#39;0xcc&#39; comes from for index 0.
+</span><span>        *(</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>) = </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#65737e;">// Initialize receive buffer
+</span><span>        *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f02c</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chanrecv1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x28</span><span>), </span><span style="color:#65737e;">// func1&#39;s output channel
+</span><span>                            (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>)); </span><span style="color:#65737e;">// Destination for received byte
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 5. First XOR Operation: (User Input Byte XOR Byte from func1)
+</span><span>        </span><span style="color:#65737e;">// Perform an XOR operation between the current user input byte and the byte received from func1.
+</span><span>        </span><span style="color:#65737e;">// The result of this XOR (XOR_RESULT1) is stored back into the receive buffer.
+</span><span>        </span><span style="color:#65737e;">// Disassembly breakdown:
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f02c: movzx ecx,BYTE PTR [rsp+0x17] -&gt; (func1_result_byte) is moved to ecx
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f031: movzx edx,BYTE PTR [rsp+0x16] -&gt; (current_user_input_byte) is moved to edx
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f036: xor edx,ecx                  -&gt; edx = edx XOR ecx (current_user_input_byte XOR func1_result_byte)
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f038: mov BYTE PTR [rsp+0x17],dl   -&gt; The result is saved back to rsp+0x17 (your 0x121 offset)
+</span><span>        *(</span><span style="color:#bf616a;">byte </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>) =
+</span><span>            *(</span><span style="color:#bf616a;">byte </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x122</span><span>) ^ </span><span style="color:#65737e;">// current_user_input_byte
+</span><span>            *(</span><span style="color:#bf616a;">byte </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>);   </span><span style="color:#65737e;">// byte_from_func1
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 6. Interaction with func2: Send XOR_RESULT1 and Receive Processed Data
+</span><span>        </span><span style="color:#65737e;">// Send the result of the first XOR (XOR_RESULT1) to func2&#39;s input channel.
+</span><span>        *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f04e</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>), </span><span style="color:#65737e;">// func2&#39;s input channel
+</span><span>                            (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>)); </span><span style="color:#65737e;">// The XOR_RESULT1
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// Receive the final processed byte from func2&#39;s output channel.
+</span><span>        </span><span style="color:#65737e;">// This byte is (XOR_RESULT1 XOR FUNC2_XOR_KEY[current_index]).
+</span><span>        *(</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>) = </span><span style="color:#d08770;">0</span><span>; </span><span style="color:#65737e;">// Initialize receive buffer
+</span><span>        *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f065</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chanrecv1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x30</span><span>), </span><span style="color:#65737e;">// func2&#39;s output channel
+</span><span>                            (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>)); </span><span style="color:#65737e;">// Destination for received byte (VALUE_FROM_FUNC2)
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 7. Final Comparison for Validation
+</span><span>        </span><span style="color:#65737e;">// Compare the byte received from func2 (VALUE_FROM_FUNC2)
+</span><span>        </span><span style="color:#65737e;">// with the corresponding byte from the hardcoded expected values,
+</span><span>        </span><span style="color:#65737e;">// using the permutation map for indexing.
+</span><span>        </span><span style="color:#65737e;">// Disassembly breakdown:
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f065: movzx ecx,BYTE PTR [rsp+0x17] -&gt; (VALUE_FROM_FUNC2) to ecx
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f06a: mov rdx,QWORD PTR [rsp+0x30]  -&gt; (current_index) to rdx
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f06f: movzx esi,BYTE PTR [rsp+rdx*1+0x18] -&gt; Get Expected_Value[Permutation_Map[current_index]] to esi
+</span><span>        </span><span style="color:#65737e;">// 0x000000000049f074: cmp sil,cl                   -&gt; Compare (Expected) vs (VALUE_FROM_FUNC2)
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(*(</span><span style="color:#bf616a;">char </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ </span><span style="color:#65737e;">// Base of expected value array (variable offset)
+</span><span>                        *(</span><span style="color:#bf616a;">long </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x108</span><span>) + </span><span style="color:#65737e;">// current_index
+</span><span>                        -</span><span style="color:#d08770;">0x120</span><span>) </span><span style="color:#65737e;">// Base offset for expected values
+</span><span>            != *(</span><span style="color:#bf616a;">char </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x121</span><span>)) </span><span style="color:#65737e;">// VALUE_FROM_FUNC2
+</span><span>        {
+</span><span>            </span><span style="color:#65737e;">// If mismatch, validation fails.
+</span><span>            </span><span style="color:#65737e;">// Send an error signal via a channel and return from the function.
+</span><span>            *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f091</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>            </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x38</span><span>),&amp;</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">egcbss</span><span>); </span><span style="color:#65737e;">// Send error signal
+</span><span>            </span><span style="color:#b48ead;">return</span><span>; </span><span style="color:#65737e;">// Validation failed, exit
+</span><span>        }
+</span><span>
+</span><span>        </span><span style="color:#65737e;">// 8. Increment Index for Next Iteration
+</span><span>        </span><span style="color:#bf616a;">current_index</span><span>++; </span><span style="color:#65737e;">// uVar4 = uVar4 + 1;
+</span><span>        </span><span style="color:#65737e;">// Remaining lines in loop update channel pointers and other boilerplate.
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// --- Error Handling and Stack Management (Outside Main Loop) ---
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Panic Trigger for Index Out of Bounds (LAB_0049f0af)
+</span><span>    </span><span style="color:#65737e;">// This block is reached if the loop&#39;s &#39;if (0x17 &lt; uVar4) break;&#39; condition
+</span><span>    </span><span style="color:#65737e;">// is met, indicating an index &gt;= 24 was reached within the processing.
+</span><span>    </span><span style="color:#65737e;">// This is an unexpected state leading to a Go runtime panic.
+</span><span style="color:#bf616a;">LAB_0049f0af</span><span>: </span><span style="color:#65737e;">// This label should actually be LAB_0049f24d in the previous func1 context, but given as 0x49f0af here.
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x140</span><span>) = </span><span style="color:#d08770;">0x49f0bc</span><span>; </span><span style="color:#65737e;">// Return address / boilerplate
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">panicIndex</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x138</span><span>),
+</span><span>                        *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register00000020 </span><span>+ -</span><span style="color:#d08770;">0x130</span><span>));
+</span><span>
+</span><span>    </span><span style="color:#65737e;">// Stack Re-alignment / More Stack (LAB_0049f09a)
+</span><span>    </span><span style="color:#65737e;">// This section handles Go&#39;s dynamic stack growth.
+</span><span>    </span><span style="color:#65737e;">// If the Goroutine runs out of stack space, runtime.morestack is called
+</span><span>    </span><span style="color:#65737e;">// to allocate a larger stack. The function then jumps back to its beginning
+</span><span>    </span><span style="color:#65737e;">// to retry execution with the larger stack.
+</span><span style="color:#bf616a;">LAB_0049f09a</span><span>: </span><span style="color:#65737e;">// This label is for the success return path or a jump from an early check.
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)(</span><span style="color:#bf616a;">puVar5 </span><span>+ -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#d08770;">0x49f0c5</span><span>; </span><span style="color:#65737e;">// Likely return address / boilerplate
+</span><span>    </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">morestack</span><span>();
+</span><span>    </span><span style="color:#bf616a;">in_RDX </span><span>= </span><span style="color:#bf616a;">extraout_RDX</span><span>;
+</span><span>    </span><span style="color:#bf616a;">register0x00000020 </span><span>= (</span><span style="color:#bf616a;">BADSPACEBASE </span><span>*)</span><span style="color:#bf616a;">puVar5</span><span>;
+</span><span>    </span><span style="color:#bf616a;">unaff_RBP </span><span>= </span><span style="color:#bf616a;">puVar6</span><span>;
+</span><span>    </span><span style="color:#b48ead;">goto </span><span style="color:#bf616a;">code_r0x0049ee00</span><span>; </span><span style="color:#65737e;">// Jumps back to the start of func3.
+</span><span>}
+</span></code></pre>
+<h2 id="main-main-func1">main.main.func1</h2>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>  </span><span style="color:#b48ead;">if </span><span>(*(</span><span style="color:#bf616a;">undefined1 </span><span>**)(</span><span style="color:#bf616a;">index </span><span>+ </span><span style="color:#d08770;">0x10</span><span>) &lt; </span><span style="color:#bf616a;">register0x00000020</span><span>) {
+</span><span>    </span><span style="color:#bf616a;">puVar4 </span><span>= (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">8</span><span>);
+</span><span>    *(</span><span style="color:#bf616a;">undefined1 </span><span>**)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#bf616a;">unaff_RBP</span><span>;
+</span><span>    </span><span style="color:#bf616a;">puVar3 </span><span>= (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x48</span><span>);
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x18</span><span>) = *(</span><span style="color:#bf616a;">undefined8 </span><span>*)(</span><span style="color:#bf616a;">in_RDX </span><span>+ </span><span style="color:#d08770;">0x10</span><span>);
+</span><span>    </span><span style="color:#bf616a;">uVar2 </span><span>= *(</span><span style="color:#bf616a;">undefined8 </span><span>*)(</span><span style="color:#bf616a;">in_RDX </span><span>+ </span><span style="color:#d08770;">8</span><span>);
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x10</span><span>) = </span><span style="color:#bf616a;">uVar2</span><span>;
+</span><span>
+</span><span>	</span><span style="color:#65737e;">// Above code is just the prologue, decompiler additions.
+</span><span>
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>	</span><span style="color:#65737e;">// The below part is the important. 
+</span><span>	</span><span style="color:#65737e;">// This is datas func1 responsiple. 
+</span><span>	</span><span style="color:#65737e;">// The logic and purpose of this data will be explaining in the func3. 
+</span><span>	
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x38</span><span>) = </span><span style="color:#d08770;">0x47300fc1f251843e</span><span>;
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x30</span><span>) = </span><span style="color:#d08770;">0x6c1ab14c445d2d6f</span><span>;
+</span><span>    *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x28</span><span>) = </span><span style="color:#d08770;">0x257cc82ac421251</span><span>;
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>	</span><span style="color:#65737e;">// This is the do while loop, purpose of this code is simple. Take index and return the value defined above. Details below.
+</span><span>	
+</span><span>	</span><span style="color:#bf616a;">do </span><span>{
+</span><span>      </span><span style="color:#65737e;">// compiler additions nothing interesting here.
+</span><span>	  
+</span><span>	  *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x50</span><span>) = </span><span style="color:#d08770;">0x49f205</span><span>;
+</span><span>
+</span><span>	  </span><span style="color:#65737e;">// Here we are taking index number via channel, which is stored into uVar1 value defined below.
+</span><span>	  
+</span><span>      </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chanrecv2</span><span>(</span><span style="color:#bf616a;">uVar2</span><span>,(</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>));
+</span><span>
+</span><span>
+</span><span>	  </span><span style="color:#65737e;">// checking the channel receive operation is the success or not. if null return notin.
+</span><span>	  </span><span style="color:#65737e;">// This is really confusing
+</span><span>	  
+</span><span>      </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">extraout_AL </span><span>== </span><span style="color:#d08770;">&#39;</span><span style="color:#96b5b4;">\0</span><span style="color:#d08770;">&#39;</span><span>) {
+</span><span>        </span><span style="color:#b48ead;">return</span><span>;
+</span><span>      }
+</span><span>
+</span><span>	  </span><span style="color:#65737e;">// Decompiler confused here again, checking the value uVar1 is below than 0x18(24) byte. 
+</span><span>	  
+</span><span>	  </span><span style="color:#bf616a;">uVar1 </span><span>= *(</span><span style="color:#bf616a;">ulong </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>);
+</span><span>      
+</span><span>	  *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>) = </span><span style="color:#d08770;">0x18</span><span>;
+</span><span>      </span><span style="color:#b48ead;">if </span><span>((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">uVar1 </span><span>&lt; </span><span style="color:#d08770;">0x18</span><span>) {
+</span><span>	  
+</span><span>	  </span><span style="color:#65737e;">// this is the re-control probably decompiler garbage.
+</span><span>	  
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#d08770;">0x17 </span><span>&lt; </span><span style="color:#bf616a;">uVar1</span><span>) </span><span style="color:#b48ead;">goto </span><span style="color:#bf616a;">LAB_0049f24d</span><span>;
+</span><span>        
+</span><span>		</span><span style="color:#65737e;">// decompiler trash addition.
+</span><span>		*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x50</span><span>) = </span><span style="color:#d08770;">0x49f22e</span><span>;
+</span><span>
+</span><span>		</span><span style="color:#65737e;">/* Here we are literally sending register0x00000020[uVar1], 
+</span><span style="color:#65737e;">		register0x00000020 is the data we pushed to the stack
+</span><span style="color:#65737e;">		uVar1 is the index.
+</span><span style="color:#65737e;">		After getting value sending value via channel to caller. main.main.func3 is the orchestrator. this is it&#39;s mess. 
+</span><span style="color:#65737e;">	*/
+</span><span>		</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x18</span><span>),
+</span><span>                          (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ (</span><span style="color:#bf616a;">uVar1 </span><span>- </span><span style="color:#d08770;">0x38</span><span>)));
+</span><span>      }
+</span><span>	  
+</span><span>	  </span><span style="color:#65737e;">// What does is else block no idea.
+</span><span>      
+</span><span>	  </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x50</span><span>) = </span><span style="color:#d08770;">0x49f245</span><span>;
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x18</span><span>),&amp;</span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">egcbss</span><span>);
+</span><span>      }
+</span><span>      </span><span style="color:#bf616a;">uVar2 </span><span>= *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x10</span><span>);
+</span><span>        } </span><span style="color:#bf616a;">while</span><span>( </span><span style="color:#d08770;">true </span><span>);
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">goto </span><span style="color:#bf616a;">LAB_0049f258</span><span>;
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>  </span><span style="color:#65737e;">// this this is panic triggerring if the value of uVar1 is the bigger than 0x17
+</span><span>  
+</span><span style="color:#bf616a;">LAB_0049f24d</span><span>:
+</span><span>                    
+</span><span>  *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x50</span><span>) = </span><span style="color:#d08770;">0x49f257</span><span>;
+</span><span>  </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">panicIndex</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x48</span><span>),
+</span><span>                     *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x40</span><span>));
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span style="color:#65737e;">// This only exist from decompiler, Checking in the prologue routine if the stack size is not enough, getting more stack, no affect to the logic.
+</span><span>
+</span><span style="color:#bf616a;">LAB_0049f258</span><span>:
+</span><span>                    
+</span><span>  *(</span><span style="color:#bf616a;">undefined8 </span><span>*)(</span><span style="color:#bf616a;">puVar3 </span><span>+ -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#d08770;">0x49f25d</span><span>;
+</span><span>  </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">morestack</span><span>();
+</span><span>  </span><span style="color:#bf616a;">in_RDX </span><span>= </span><span style="color:#bf616a;">extraout_RDX</span><span>;
+</span><span>  </span><span style="color:#bf616a;">register0x00000020 </span><span>= (</span><span style="color:#bf616a;">BADSPACEBASE </span><span>*)</span><span style="color:#bf616a;">puVar3</span><span>;
+</span><span>  </span><span style="color:#bf616a;">unaff_RBP </span><span>= </span><span style="color:#bf616a;">puVar4</span><span>;
+</span><span>  </span><span style="color:#b48ead;">goto </span><span style="color:#bf616a;">code_r0x0049f1a0</span><span>;
+</span><span>}
+</span></code></pre>
+<h2 id="main-main-func2">main.main.func2</h2>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>...
+</span><span>...
+</span><span>...
+</span><span>	  </span><span style="color:#65737e;">/*
+</span><span style="color:#65737e;">	  This is a little bir interesting. Everytime func2 is called, the loop started from 0. the loop iterates 24 times. 
+</span><span style="color:#65737e;">	  */
+</span><span>	  *(</span><span style="color:#bf616a;">long </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>) = </span><span style="color:#bf616a;">lVar2</span><span>;
+</span><span>	  
+</span><span>	  </span><span style="color:#65737e;">// Pushing datas to stack. The purpose of these datas are the used for xoring operation. simply this function does getting data with index via channel, xor with it and than return it.
+</span><span>	  
+</span><span>	  *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x39</span><span>) = </span><span style="color:#d08770;">0x912efa6c49bd6be</span><span>;
+</span><span>      *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x31</span><span>) = </span><span style="color:#d08770;">0x6a163b0583444d46</span><span>;
+</span><span>      *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x29</span><span>) = </span><span style="color:#d08770;">0x24e61ff4643ea395</span><span>;
+</span><span>   
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>	  </span><span style="color:#bf616a;">lVar2 </span><span>= </span><span style="color:#d08770;">0</span><span>;
+</span><span>   </span><span style="color:#65737e;">/*
+</span><span style="color:#65737e;">   lVar2 is the index of the loop which stored in the $rsp-0x20.
+</span><span style="color:#65737e;">   */                 
+</span><span>      </span><span style="color:#bf616a;">while</span><span>( </span><span style="color:#d08770;">true </span><span>) {
+</span><span>                    
+</span><span>        *(</span><span style="color:#bf616a;">long </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>) = </span><span style="color:#bf616a;">lVar2</span><span>;
+</span><span>
+</span><span>		</span><span style="color:#65737e;">// Getting 24 bytes long data via channel
+</span><span>		
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chanrecv2</span><span>(</span><span style="color:#bf616a;">uVar1</span><span>,(</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x21</span><span>));
+</span><span>        
+</span><span>		
+</span><span>		</span><span style="color:#65737e;">// same control data received successfully or not.            
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">extraout_AL </span><span>== </span><span style="color:#d08770;">&#39;</span><span style="color:#96b5b4;">\0</span><span style="color:#d08770;">&#39;</span><span>) {
+</span><span>          </span><span style="color:#b48ead;">return</span><span>;
+</span><span>        }
+</span></code></pre>
+<pre data-lang="go" style="background-color:#2b303b;color:#c0c5ce;" class="language-go "><code class="language-go" data-lang="go"><span>		</span><span style="color:#65737e;">/* Controlling the length its greater than 0x17. if its go to panic. 
+</span><span style="color:#65737e;">		
+</span><span style="color:#65737e;">		if not, simple xor (received_data[i])^(data[i])
+</span><span style="color:#65737e;">		*/
+</span><span>		</span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#d08770;">0x17 </span><span>&lt; *(</span><span style="color:#bf616a;">ulong </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>)) </span><span style="color:#b48ead;">break</span><span>;
+</span><span>        </span><span style="color:#65737e;">/*
+</span><span style="color:#65737e;">		Here the xor operation executed. xor every single byte sent via channel.
+</span><span style="color:#65737e;">		*/
+</span><span>		*(</span><span style="color:#bf616a;">byte </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x21</span><span>) =
+</span><span>             *(</span><span style="color:#bf616a;">byte </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x21</span><span>) ^
+</span><span>             *(</span><span style="color:#bf616a;">byte </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+
+</span><span>                      (*(</span><span style="color:#bf616a;">ulong </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>) - </span><span style="color:#d08770;">0x39</span><span>));
+</span><span>
+</span><span>		</span><span style="color:#65737e;">/*
+</span><span style="color:#65737e;">		Sending that 24 byte long data via channel.
+</span><span style="color:#65737e;">		*/
+</span><span>        </span><span style="color:#bf616a;">runtime</span><span>.</span><span style="color:#bf616a;">chansend1</span><span>(*(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x18</span><span>),
+</span><span>                          (</span><span style="color:#bf616a;">undefined1 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x21</span><span>));
+</span><span>        
+</span><span>		</span><span style="color:#bf616a;">lVar2 </span><span>= *(</span><span style="color:#bf616a;">long </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x20</span><span>) + </span><span style="color:#d08770;">1</span><span>;
+</span><span>        </span><span style="color:#bf616a;">uVar1 </span><span>= *(</span><span style="color:#bf616a;">undefined8 </span><span>*)((</span><span style="color:#bf616a;">long</span><span>)</span><span style="color:#bf616a;">register0x00000020 </span><span>+ -</span><span style="color:#d08770;">0x10</span><span>);
+</span><span>      }
+</span><span>...
+</span><span>...
+</span><span>...
+</span></code></pre>
+<h2 id="the-resolve-script">The Resolve Script</h2>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;"># from IPython import embed # Commented out as it&#39;s not used in the final script
+</span><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span style="color:#65737e;"># --- Constants ---
+</span><span style="color:#65737e;"># Local binary path
+</span><span style="color:#bf616a;">LOCAL_FILE </span><span>= &quot;</span><span style="color:#a3be8c;">./chal</span><span>&quot;
+</span><span>
+</span><span style="color:#65737e;"># Function addresses (for GDB breakpoints or reference)
+</span><span style="color:#bf616a;">BFUNC1 </span><span>= </span><span style="color:#d08770;">0x49f1a0
+</span><span style="color:#bf616a;">BFUNC2 </span><span>= </span><span style="color:#d08770;">0x49f0e0
+</span><span style="color:#bf616a;">BFUNC3 </span><span>= </span><span style="color:#d08770;">0x49ee00
+</span><span>
+</span><span style="color:#65737e;"># Specific instruction addresses within functions (for GDB breakpoints)
+</span><span style="color:#bf616a;">BFUNC3_XOR_CHECK </span><span>= </span><span style="color:#d08770;">0x49f038
+</span><span style="color:#bf616a;">BFUNC3_WHILE_ENTRY </span><span>= </span><span style="color:#d08770;">0x49eff8
+</span><span style="color:#bf616a;">BFUNC3_STACK_SETUP </span><span>= </span><span style="color:#d08770;">0x49efe6
+</span><span style="color:#bf616a;">BFUNC3_CHECK </span><span>= </span><span style="color:#d08770;">0x49f074
+</span><span style="color:#bf616a;">BFUNC2_XOR_OPR </span><span>= </span><span style="color:#d08770;">0x49f13f
+</span><span style="color:#bf616a;">BFUNC2_RECEIVE_CHAN </span><span>= </span><span style="color:#d08770;">0x49f161
+</span><span>
+</span><span style="color:#65737e;"># GDB script for debugging
+</span><span style="color:#bf616a;">GDBSCRIPT </span><span>= </span><span style="color:#b48ead;">f</span><span>&quot;&quot;&quot;
+</span><span style="color:#a3be8c;">set follow-fork-mode child
+</span><span style="color:#a3be8c;">b *</span><span>{</span><span style="color:#bf616a;">BFUNC3_XOR_CHECK</span><span style="color:#d08770;">:#x</span><span>}
+</span><span>&quot;&quot;&quot;
+</span><span>
+</span><span style="color:#65737e;"># Hardcoded data extracted from main.main.func3 (Expected values)
+</span><span style="color:#65737e;"># These are the expected output bytes after all transformations.
+</span><span style="color:#bf616a;">FUNC3_HARDCODED_DATA </span><span>= [
+</span><span>    </span><span style="color:#d08770;">0x5c</span><span>, </span><span style="color:#d08770;">0xef</span><span>, </span><span style="color:#d08770;">0x33</span><span>, </span><span style="color:#d08770;">0x0d</span><span>, </span><span style="color:#d08770;">0x92</span><span>, </span><span style="color:#d08770;">0xd6</span><span>, </span><span style="color:#d08770;">0xc4</span><span>, </span><span style="color:#d08770;">0x58</span><span>,
+</span><span>    </span><span style="color:#d08770;">0xac</span><span>, </span><span style="color:#d08770;">0x23</span><span>, </span><span style="color:#d08770;">0x19</span><span>, </span><span style="color:#d08770;">0xf6</span><span>, </span><span style="color:#d08770;">0x76</span><span>, </span><span style="color:#d08770;">0x04</span><span>, </span><span style="color:#d08770;">0x25</span><span>, </span><span style="color:#d08770;">0x77</span><span>,
+</span><span>    </span><span style="color:#d08770;">0xd0</span><span>, </span><span style="color:#d08770;">0xdb</span><span>, </span><span style="color:#d08770;">0x1f</span><span>, </span><span style="color:#d08770;">0x90</span><span>, </span><span style="color:#d08770;">0x93</span><span>, </span><span style="color:#d08770;">0x3c</span><span>, </span><span style="color:#d08770;">0x90</span><span>, </span><span style="color:#d08770;">0xf5
+</span><span>]
+</span><span>
+</span><span style="color:#65737e;"># Hardcoded data extracted from main.main.func2 (XOR Key / Mask)
+</span><span style="color:#65737e;"># This is the key used by func2 for its XOR operation.
+</span><span style="color:#bf616a;">FUNC2_HARDCODED_DATA </span><span>= [
+</span><span>    </span><span style="color:#d08770;">0xbe</span><span>, </span><span style="color:#d08770;">0xd6</span><span>, </span><span style="color:#d08770;">0x9b</span><span>, </span><span style="color:#d08770;">0xc4</span><span>, </span><span style="color:#d08770;">0xa6</span><span>, </span><span style="color:#d08770;">0xef</span><span>, </span><span style="color:#d08770;">0x12</span><span>, </span><span style="color:#d08770;">0x09</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x46</span><span>, </span><span style="color:#d08770;">0x4d</span><span>, </span><span style="color:#d08770;">0x44</span><span>, </span><span style="color:#d08770;">0x83</span><span>, </span><span style="color:#d08770;">0x05</span><span>, </span><span style="color:#d08770;">0x3b</span><span>, </span><span style="color:#d08770;">0x16</span><span>, </span><span style="color:#d08770;">0x6a</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x95</span><span>, </span><span style="color:#d08770;">0xa3</span><span>, </span><span style="color:#d08770;">0x3e</span><span>, </span><span style="color:#d08770;">0x64</span><span>, </span><span style="color:#d08770;">0xf4</span><span>, </span><span style="color:#d08770;">0x1f</span><span>, </span><span style="color:#d08770;">0xe6</span><span>, </span><span style="color:#d08770;">0x24
+</span><span>]
+</span><span>
+</span><span style="color:#65737e;"># Permutation map / indices extracted from main.main.func3
+</span><span style="color:#65737e;"># This map defines the reordering of elements for func1&#39;s data access.
+</span><span style="color:#bf616a;">INDICES </span><span>= [
+</span><span>    </span><span style="color:#d08770;">0x15</span><span>, </span><span style="color:#d08770;">0x17</span><span>, </span><span style="color:#d08770;">0x01</span><span>, </span><span style="color:#d08770;">0x03</span><span>, </span><span style="color:#d08770;">0x0e</span><span>, </span><span style="color:#d08770;">0x12</span><span>, </span><span style="color:#d08770;">0x0d</span><span>, </span><span style="color:#d08770;">0x00</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x14</span><span>, </span><span style="color:#d08770;">0x0a</span><span>, </span><span style="color:#d08770;">0x06</span><span>, </span><span style="color:#d08770;">0x0b</span><span>, </span><span style="color:#d08770;">0x11</span><span>, </span><span style="color:#d08770;">0x02</span><span>, </span><span style="color:#d08770;">0x0f</span><span>, </span><span style="color:#d08770;">0x08</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x09</span><span>, </span><span style="color:#d08770;">0x0c</span><span>, </span><span style="color:#d08770;">0x10</span><span>, </span><span style="color:#d08770;">0x04</span><span>, </span><span style="color:#d08770;">0x16</span><span>, </span><span style="color:#d08770;">0x07</span><span>, </span><span style="color:#d08770;">0x05</span><span>, </span><span style="color:#d08770;">0x13
+</span><span>]
+</span><span>
+</span><span style="color:#65737e;"># Hardcoded data extracted from main.main.func1 (Leaked data / First XOR operand source)
+</span><span style="color:#65737e;"># This is the data block that func1 provides based on indices.
+</span><span style="color:#65737e;"># (Note: Based on analysis, this data is XORed with user input
+</span><span style="color:#65737e;">#  before being passed to func2 for its XOR operation).
+</span><span style="color:#bf616a;">FUNC1_HARDCODED_DATA </span><span>= [
+</span><span>    </span><span style="color:#d08770;">0x3e</span><span>, </span><span style="color:#d08770;">0x84</span><span>, </span><span style="color:#d08770;">0x51</span><span>, </span><span style="color:#d08770;">0xf2</span><span>, </span><span style="color:#d08770;">0xc1</span><span>, </span><span style="color:#d08770;">0x0f</span><span>, </span><span style="color:#d08770;">0x30</span><span>, </span><span style="color:#d08770;">0x47</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x6f</span><span>, </span><span style="color:#d08770;">0x2d</span><span>, </span><span style="color:#d08770;">0x5d</span><span>, </span><span style="color:#d08770;">0x44</span><span>, </span><span style="color:#d08770;">0x4c</span><span>, </span><span style="color:#d08770;">0xb1</span><span>, </span><span style="color:#d08770;">0x1a</span><span>, </span><span style="color:#d08770;">0x6c</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x51</span><span>, </span><span style="color:#d08770;">0x12</span><span>, </span><span style="color:#d08770;">0x42</span><span>, </span><span style="color:#d08770;">0xac</span><span>, </span><span style="color:#d08770;">0x82</span><span>, </span><span style="color:#d08770;">0xcc</span><span>, </span><span style="color:#d08770;">0x57</span><span>, </span><span style="color:#d08770;">0x02
+</span><span>]
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">calculate_flag</span><span>() -&gt; bytes:
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Calculates the correct flag by reversing the triple XOR and permutation logic
+</span><span style="color:#65737e;">    observed in main.main.func3, main.main.func2, and main.main.func1.
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    The validation logic in the binary is:
+</span><span style="color:#65737e;">    Expected_Result[i] == ( (User_Input[i] XOR Value_From_Func1[i]) XOR Key_From_Func2[i] )
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    To find User_Input[i] (the flag byte):
+</span><span style="color:#65737e;">    User_Input[i] = Expected_Result[i] XOR Key_From_Func2[i] XOR Value_From_Func1[i]
+</span><span style="color:#65737e;">
+</span><span style="color:#65737e;">    Where:
+</span><span style="color:#65737e;">    - Expected_Result[i]: func3_hardcoded_data[i]
+</span><span style="color:#65737e;">    - Key_From_Func2[i]: func2_hardcoded_data[i]
+</span><span style="color:#65737e;">    - Value_From_Func1[i]: func1_hardcoded_data[INDICES[i]] (due to permutation)
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>    xored_flag_list = [</span><span style="color:#d08770;">0</span><span>] * </span><span style="color:#96b5b4;">len</span><span>(</span><span style="color:#bf616a;">INDICES</span><span>)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">for </span><span>i, idx </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">enumerate</span><span>(</span><span style="color:#bf616a;">INDICES</span><span>):
+</span><span>        </span><span style="color:#65737e;"># Value from func1&#39;s internal data (after permutation)
+</span><span>        value_from_func1 = </span><span style="color:#bf616a;">FUNC1_HARDCODED_DATA</span><span>[idx]
+</span><span>
+</span><span>        </span><span style="color:#65737e;"># Key byte from func2&#39;s hardcoded XOR key
+</span><span>        key_from_func2 = </span><span style="color:#bf616a;">FUNC2_HARDCODED_DATA</span><span>[i]
+</span><span>
+</span><span>        </span><span style="color:#65737e;"># Expected result byte from func3&#39;s hardcoded data
+</span><span>        expected_result = </span><span style="color:#bf616a;">FUNC3_HARDCODED_DATA</span><span>[i]
+</span><span>
+</span><span>        </span><span style="color:#65737e;"># Apply the triple XOR in reverse
+</span><span>        xored_flag_list[i] = expected_result ^ key_from_func2 ^ value_from_func1
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Convert the list of integers to a bytes object
+</span><span>    flag_bytes = </span><span style="color:#bf616a;">bytes</span><span>(xored_flag_list)
+</span><span>    </span><span style="color:#b48ead;">return </span><span>flag_bytes
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">main</span><span>():
+</span><span>    </span><span style="color:#65737e;">&quot;&quot;&quot;
+</span><span style="color:#65737e;">    Main function to orchestrate the exploit:
+</span><span style="color:#65737e;">    Calculates the flag, connects to the target, sends credentials,
+</span><span style="color:#65737e;">    and submits the calculated flag.
+</span><span style="color:#65737e;">    &quot;&quot;&quot;
+</span><span>    </span><span style="color:#65737e;"># --- Configuration ---
+</span><span>    </span><span style="color:#65737e;"># Set to True for local execution, False for remote connection
+</span><span>    </span><span style="color:#bf616a;">IS_LOCAL </span><span>= </span><span style="color:#d08770;">True
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">IS_LOCAL</span><span>:
+</span><span>        </span><span style="color:#65737e;"># Start the program locally with GDB attached (if needed)
+</span><span>        </span><span style="color:#65737e;"># Remove gdbscript if not debugging
+</span><span>        proc = gdb.</span><span style="color:#bf616a;">debug</span><span>(</span><span style="color:#bf616a;">LOCAL_FILE</span><span>, </span><span style="color:#bf616a;">gdbscript</span><span>=</span><span style="color:#bf616a;">GDBSCRIPT</span><span>)
+</span><span>        </span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Starting locally: </span><span>{</span><span style="color:#bf616a;">LOCAL_FILE</span><span>}&quot;)
+</span><span>    </span><span style="color:#b48ead;">else</span><span>:
+</span><span>        </span><span style="color:#65737e;"># Remote connection details
+</span><span>        </span><span style="color:#bf616a;">REMOTE_HOST </span><span>= &#39;</span><span style="color:#a3be8c;">challenge.example.com</span><span>&#39;  </span><span style="color:#65737e;"># Target IP or hostname
+</span><span>        </span><span style="color:#bf616a;">REMOTE_PORT </span><span>= </span><span style="color:#d08770;">1337                   </span><span style="color:#65737e;"># Target port
+</span><span>        proc = </span><span style="color:#bf616a;">remote</span><span>(</span><span style="color:#bf616a;">REMOTE_HOST</span><span>, </span><span style="color:#bf616a;">REMOTE_PORT</span><span>)
+</span><span>        </span><span style="color:#bf616a;">info</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Connecting remotely: </span><span>{</span><span style="color:#bf616a;">REMOTE_HOST</span><span>}</span><span style="color:#a3be8c;">:</span><span>{</span><span style="color:#bf616a;">REMOTE_PORT</span><span>}&quot;)
+</span><span>
+</span><span>    </span><span style="color:#65737e;"># Calculate the flag
+</span><span>    calculated_flag = </span><span style="color:#bf616a;">calculate_flag</span><span>()
+</span><span>    </span><span style="color:#bf616a;">success</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Calculated Flag (Hex): </span><span>{calculated_flag.</span><span style="color:#bf616a;">hex</span><span>()}&quot;)
+</span><span>    </span><span style="color:#bf616a;">success</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">Calculated Flag (ASCII): </span><span>{calculated_flag.</span><span style="color:#bf616a;">decode</span><span>(&#39;</span><span style="color:#a3be8c;">ascii</span><span>&#39;, </span><span style="color:#bf616a;">errors</span><span>=&#39;</span><span style="color:#a3be8c;">ignore</span><span>&#39;)}&quot;)
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">try</span><span>:
+</span><span>        </span><span style="color:#65737e;"># Receive and send Username
+</span><span>        proc.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">Username: </span><span>&#39;)
+</span><span>        proc.</span><span style="color:#bf616a;">sendline</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">testuser</span><span>&#39;)
+</span><span>        </span><span style="color:#bf616a;">info</span><span>(&quot;</span><span style="color:#a3be8c;">Username sent.</span><span>&quot;)
+</span><span>
+</span><span>        </span><span style="color:#65737e;"># Receive and send Password
+</span><span>        proc.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">Password: </span><span>&#39;)
+</span><span>        proc.</span><span style="color:#bf616a;">sendline</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">testpass</span><span>&#39;)
+</span><span>        </span><span style="color:#bf616a;">info</span><span>(&quot;</span><span style="color:#a3be8c;">Password sent.</span><span>&quot;)
+</span><span>
+</span><span>        </span><span style="color:#65737e;"># Receive &quot;Input your string:&quot; prompt and send the calculated flag
+</span><span>        proc.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">Input your string: </span><span>&#39;)
+</span><span>        proc.</span><span style="color:#bf616a;">sendline</span><span>(calculated_flag)
+</span><span>        </span><span style="color:#bf616a;">success</span><span>(&quot;</span><span style="color:#a3be8c;">Calculated flag sent!</span><span>&quot;)
+</span><span>
+</span><span>        </span><span style="color:#65737e;"># Wait for the program&#39;s final output (success or failure message)
+</span><span>        output = proc.</span><span style="color:#bf616a;">recvuntil</span><span>(</span><span style="color:#b48ead;">b</span><span>&#39;</span><span style="color:#a3be8c;">string.</span><span>&#39;, </span><span style="color:#bf616a;">timeout</span><span>=</span><span style="color:#d08770;">5</span><span>)
+</span><span>
+</span><span>        </span><span style="color:#b48ead;">if b</span><span>&#39;</span><span style="color:#a3be8c;">Correct string.</span><span>&#39; in output:
+</span><span>            </span><span style="color:#bf616a;">success</span><span>(&quot;</span><span style="color:#a3be8c;">Flag ACCEPTED! Program said &#39;Correct string.&#39;.</span><span>&quot;)
+</span><span>        </span><span style="color:#b48ead;">elif b</span><span>&#39;</span><span style="color:#a3be8c;">Incorrect string.</span><span>&#39; in output:
+</span><span>            </span><span style="color:#bf616a;">warn</span><span>(&quot;</span><span style="color:#a3be8c;">Flag REJECTED. Program said &#39;Incorrect string.&#39;.</span><span>&quot;)
+</span><span>        </span><span style="color:#b48ead;">else</span><span>:
+</span><span>            </span><span style="color:#bf616a;">warn</span><span>(&quot;</span><span style="color:#a3be8c;">Unexpected output received. Program behaved differently.</span><span>&quot;)
+</span><span>            </span><span style="color:#96b5b4;">print</span><span>(output.</span><span style="color:#bf616a;">decode</span><span>(</span><span style="color:#bf616a;">errors</span><span>=&#39;</span><span style="color:#a3be8c;">ignore</span><span>&#39;)) </span><span style="color:#65737e;"># Print whatever was received
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">except </span><span>EOFError:
+</span><span>        </span><span style="color:#bf616a;">error</span><span>(&quot;</span><span style="color:#a3be8c;">Connection closed unexpectedly.</span><span>&quot;)
+</span><span>    </span><span style="color:#b48ead;">except </span><span>Exception </span><span style="color:#b48ead;">as </span><span>e:
+</span><span>        </span><span style="color:#bf616a;">error</span><span>(</span><span style="color:#b48ead;">f</span><span>&quot;</span><span style="color:#a3be8c;">An error occurred: </span><span>{e}&quot;)
+</span><span>    </span><span style="color:#b48ead;">finally</span><span>:
+</span><span>        proc.</span><span style="color:#bf616a;">close</span><span>() </span><span style="color:#65737e;"># Ensure the connection is closed
+</span><span>
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>__name__ == &quot;</span><span style="color:#a3be8c;">__main__</span><span>&quot;:
+</span><span>    </span><span style="color:#bf616a;">main</span><span>()
+</span><span>
+</span><span>
+</span></code></pre>
+<h1 id="my-original-code">My Original Code</h1>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span style="color:#65737e;">#from IPython import embed
+</span><span style="color:#b48ead;">from </span><span>pwn </span><span style="color:#b48ead;">import </span><span style="color:#d08770;">*
+</span><span>
+</span><span>local_file = &quot;</span><span style="color:#a3be8c;">./chal</span><span>&quot;
+</span><span>
+</span><span style="color:#65737e;">#set follow-fork-mode child
+</span><span style="color:#65737e;">#b *0x49eb40
+</span><span>
+</span><span>
+</span><span>
+</span><span>
+</span><span>
+</span><span>after_func1 = </span><span style="color:#d08770;">0x49ec10
+</span><span>after_func2 = </span><span style="color:#d08770;">0x49ec5e
+</span><span>after_func3 = </span><span style="color:#d08770;">0x49ecea
+</span><span>bprnt = </span><span style="color:#d08770;">0x49eaed
+</span><span>
+</span><span>bfunc1 = &quot;</span><span style="color:#a3be8c;">0x49f1a0</span><span>&quot;
+</span><span>bfunc2 = &quot;</span><span style="color:#a3be8c;">0x49f0e0</span><span>&quot;
+</span><span>bfunc3 = &quot;</span><span style="color:#a3be8c;">0x49ee00</span><span>&quot;
+</span><span>
+</span><span>b_sendchan2 = &quot;</span><span style="color:#a3be8c;">0x000000000049f049</span><span>&quot;
+</span><span>
+</span><span>func3_xor_check = &quot;</span><span style="color:#a3be8c;">0x000000000049f038</span><span>&quot; </span><span style="color:#65737e;">#&quot;0x000000000049f036&quot;
+</span><span>func3_while_entry = &quot;</span><span style="color:#a3be8c;">0x49eff8</span><span>&quot;
+</span><span>func3_stacksetup = &quot;</span><span style="color:#a3be8c;">0x000000000049efe6</span><span>&quot;
+</span><span>
+</span><span>func3_check = &quot;</span><span style="color:#a3be8c;">0x49f074</span><span>&quot;
+</span><span>
+</span><span>
+</span><span>
+</span><span style="color:#65737e;">#b *{func3_stacksetup}
+</span><span style="color:#65737e;">#b *{b_sendchan2}
+</span><span style="color:#65737e;">#b *{func3_xor_check}
+</span><span>
+</span><span style="color:#65737e;">#b *{func3_xor_check}
+</span><span style="color:#65737e;">#b *{func3_check}
+</span><span>
+</span><span>func2_xor_opr = &quot;</span><span style="color:#a3be8c;">0x49f13f</span><span>&quot;
+</span><span>func2_receive_chan = &quot;</span><span style="color:#a3be8c;">0x49f161</span><span>&quot;
+</span><span>
+</span><span>gdbscript=</span><span style="color:#b48ead;">f</span><span>&quot;&quot;&quot;
+</span><span style="color:#a3be8c;">set follow-fork-mode child
+</span><span style="color:#a3be8c;">b *</span><span>{func2_receive_chan}
+</span><span style="color:#a3be8c;">b *</span><span>{func2_xor_opr}
+</span><span style="color:#a3be8c;">b *</span><span>{func3_xor_check}
+</span><span>&quot;&quot;&quot;
+</span><span style="color:#65737e;">#for i, idx in enumerate(indices):
+</span><span style="color:#65737e;">#	result[i] = (xor_keylist[i]^validation_list[i])^(func1_list[idx])
+</span><span>
+</span><span>validation_list=[
+</span><span>    </span><span style="color:#d08770;">0x5c</span><span>, </span><span style="color:#d08770;">0xef</span><span>, </span><span style="color:#d08770;">0x33</span><span>, </span><span style="color:#d08770;">0x0d</span><span>, </span><span style="color:#d08770;">0x92</span><span>, </span><span style="color:#d08770;">0xd6</span><span>, </span><span style="color:#d08770;">0xc4</span><span>, </span><span style="color:#d08770;">0x58</span><span>,
+</span><span>    </span><span style="color:#d08770;">0xac</span><span>, </span><span style="color:#d08770;">0x23</span><span>, </span><span style="color:#d08770;">0x19</span><span>, </span><span style="color:#d08770;">0xf6</span><span>, </span><span style="color:#d08770;">0x76</span><span>, </span><span style="color:#d08770;">0x04</span><span>, </span><span style="color:#d08770;">0x25</span><span>, </span><span style="color:#d08770;">0x77</span><span>,
+</span><span>    </span><span style="color:#d08770;">0xd0</span><span>, </span><span style="color:#d08770;">0xdb</span><span>, </span><span style="color:#d08770;">0x1f</span><span>, </span><span style="color:#d08770;">0x90</span><span>, </span><span style="color:#d08770;">0x93</span><span>, </span><span style="color:#d08770;">0x3c</span><span>, </span><span style="color:#d08770;">0x90</span><span>, </span><span style="color:#d08770;">0xf5
+</span><span>]
+</span><span>
+</span><span>
+</span><span>xor_keylist = [
+</span><span>    </span><span style="color:#d08770;">0xbe</span><span>, </span><span style="color:#d08770;">0xd6</span><span>, </span><span style="color:#d08770;">0x9b</span><span>, </span><span style="color:#d08770;">0xc4</span><span>, </span><span style="color:#d08770;">0xa6</span><span>, </span><span style="color:#d08770;">0xef</span><span>, </span><span style="color:#d08770;">0x12</span><span>, </span><span style="color:#d08770;">0x09</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x46</span><span>, </span><span style="color:#d08770;">0x4d</span><span>, </span><span style="color:#d08770;">0x44</span><span>, </span><span style="color:#d08770;">0x83</span><span>, </span><span style="color:#d08770;">0x05</span><span>, </span><span style="color:#d08770;">0x3b</span><span>, </span><span style="color:#d08770;">0x16</span><span>, </span><span style="color:#d08770;">0x6a</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x95</span><span>, </span><span style="color:#d08770;">0xa3</span><span>, </span><span style="color:#d08770;">0x3e</span><span>, </span><span style="color:#d08770;">0x64</span><span>, </span><span style="color:#d08770;">0xf4</span><span>, </span><span style="color:#d08770;">0x1f</span><span>, </span><span style="color:#d08770;">0xe6</span><span>, </span><span style="color:#d08770;">0x24
+</span><span>]
+</span><span>
+</span><span>indices = [
+</span><span>    </span><span style="color:#d08770;">0x15</span><span>,  </span><span style="color:#65737e;"># at -0x100
+</span><span>    </span><span style="color:#d08770;">0x17</span><span>,  </span><span style="color:#65737e;"># at -0xf8
+</span><span>    </span><span style="color:#d08770;">0x01</span><span>,     </span><span style="color:#65737e;"># at -0xf0
+</span><span>    </span><span style="color:#d08770;">0x03</span><span>,   </span><span style="color:#65737e;"># at -0xe0 (decimal 14)
+</span><span>    </span><span style="color:#d08770;">0x0e</span><span>,  </span><span style="color:#65737e;"># at -0xd8 (decimal 18)
+</span><span>    </span><span style="color:#d08770;">0x12</span><span>,   </span><span style="color:#65737e;"># at -0xd0 (decimal 13)
+</span><span>    </span><span style="color:#d08770;">0x0d</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x00</span><span>, </span><span style="color:#65737e;"># at -200 (which is -0xc8, if 8-byte aligned)
+</span><span>    </span><span style="color:#d08770;">0x14</span><span>,  </span><span style="color:#65737e;"># at -0xc0 (decimal 20)
+</span><span>    </span><span style="color:#d08770;">0x0a</span><span>,    </span><span style="color:#65737e;"># at -0xb8
+</span><span>    </span><span style="color:#d08770;">0x06</span><span>,     </span><span style="color:#65737e;"># at -0xb0
+</span><span>    </span><span style="color:#d08770;">0x0b</span><span>,   </span><span style="color:#65737e;"># at -0xa8 (decimal 11)
+</span><span>    </span><span style="color:#d08770;">0x11</span><span>,  </span><span style="color:#65737e;"># at -0xa0 (decimal 17)
+</span><span>    </span><span style="color:#d08770;">0x02</span><span>,     </span><span style="color:#65737e;"># at -0x98
+</span><span>    </span><span style="color:#d08770;">0x0f</span><span>,   </span><span style="color:#65737e;"># at -0x90 (decimal 15)
+</span><span>    </span><span style="color:#d08770;">0x08</span><span>,     </span><span style="color:#65737e;"># at -0x88
+</span><span>    </span><span style="color:#d08770;">0x09</span><span>,     </span><span style="color:#65737e;"># at -0x80
+</span><span>    </span><span style="color:#d08770;">0x0c</span><span>,   </span><span style="color:#65737e;"># at -0x78 (decimal 12)
+</span><span>    </span><span style="color:#d08770;">0x10</span><span>,  </span><span style="color:#65737e;"># at -0x70 (decimal 16)
+</span><span>    </span><span style="color:#d08770;">0x04</span><span>,     </span><span style="color:#65737e;"># at -0x68
+</span><span>    </span><span style="color:#d08770;">0x16</span><span>,  </span><span style="color:#65737e;"># at -0x60 (decimal 22)
+</span><span>    </span><span style="color:#d08770;">0x07</span><span>,     </span><span style="color:#65737e;"># at -0x58
+</span><span>    </span><span style="color:#d08770;">0x05</span><span>,     </span><span style="color:#65737e;"># at -0x50
+</span><span>    </span><span style="color:#d08770;">0x13   </span><span style="color:#65737e;"># at -0x48 (decimal 19)
+</span><span>]
+</span><span>
+</span><span>
+</span><span>func1_list = [
+</span><span>    </span><span style="color:#d08770;">0x3e</span><span>, </span><span style="color:#d08770;">0x84</span><span>, </span><span style="color:#d08770;">0x51</span><span>, </span><span style="color:#d08770;">0xf2</span><span>, </span><span style="color:#d08770;">0xc1</span><span>, </span><span style="color:#d08770;">0x0f</span><span>, </span><span style="color:#d08770;">0x30</span><span>, </span><span style="color:#d08770;">0x47</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x6f</span><span>, </span><span style="color:#d08770;">0x2d</span><span>, </span><span style="color:#d08770;">0x5d</span><span>, </span><span style="color:#d08770;">0x44</span><span>, </span><span style="color:#d08770;">0x4c</span><span>, </span><span style="color:#d08770;">0xb1</span><span>, </span><span style="color:#d08770;">0x1a</span><span>, </span><span style="color:#d08770;">0x6c</span><span>,
+</span><span>    </span><span style="color:#d08770;">0x51</span><span>, </span><span style="color:#d08770;">0x12</span><span>, </span><span style="color:#d08770;">0x42</span><span>, </span><span style="color:#d08770;">0xac</span><span>, </span><span style="color:#d08770;">0x82</span><span>, </span><span style="color:#d08770;">0xcc</span><span>, </span><span style="color:#d08770;">0x57</span><span>, </span><span style="color:#d08770;">0x02
+</span><span>]
+</span><span>
+</span><span>
+</span><span>xored_flag = [</span><span style="color:#d08770;">0</span><span>] * </span><span style="color:#96b5b4;">len</span><span>(indices)
+</span><span style="color:#b48ead;">for </span><span>i, idx </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">enumerate</span><span>(indices):
+</span><span>    xored_flag[i] = (xor_keylist[i]^validation_list[i])^(func1_list[idx])
+</span><span>
+</span><span>
+</span><span>
+</span><span style="color:#65737e;">#b *0x49f1f1
+</span><span>
+</span><span>payload = </span><span style="color:#b48ead;">b</span><span>&quot;&quot;
+</span><span>
+</span><span style="color:#b48ead;">for </span><span>i </span><span style="color:#b48ead;">in </span><span>xored_flag:
+</span><span>	payload+=</span><span style="color:#bf616a;">p8</span><span>(i)
+</span><span>
+</span><span>
+</span><span style="color:#65737e;">#p = gdb.debug(local_file, gdbscript=gdbscript)
+</span><span>p = </span><span style="color:#bf616a;">process</span><span>(local_file)
+</span><span>
+</span><span style="color:#96b5b4;">print</span><span>(p.</span><span style="color:#bf616a;">recv</span><span>().</span><span style="color:#bf616a;">decode</span><span>())
+</span><span>text = </span><span style="color:#b48ead;">b</span><span>&quot;&quot;
+</span><span>text += payload
+</span><span>p.</span><span style="color:#bf616a;">sendline</span><span>(text)
+</span><span>
+</span><span style="color:#65737e;">#embed()
+</span><span>log.</span><span style="color:#bf616a;">info</span><span>(&#39;&#39;.</span><span style="color:#bf616a;">join</span><span>([</span><span style="color:#96b5b4;">chr</span><span>(i) </span><span style="color:#b48ead;">for </span><span>i </span><span style="color:#b48ead;">in </span><span>xored_flag]))
+</span><span>p.</span><span style="color:#bf616a;">interactive</span><span>()
+</span><span>
+</span></code></pre>
+</section>
+  <hr />
+  <!-- Post Taxonomies -->
+
+  <!-- Post Nav -->
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/docker-for-binaryexploitation/" accesskey=","
+    ><span class="mr-1.5">&#8249;</span><span>Docker for Binary Exploitation</span></a>
+</nav>
+
+  <!-- Begin Page End inject -->
+  
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+<script>
+  mediumZoom('img:not(.no-zoom)', {
+    margin: 24,
+    background: 'rgba(0, 0, 0, 0.9)',
+    scrollOffset: 40,
+  });
+</script>
+<!-- Only runs if .encrypted-content exists -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function showDecryptionUI(block) {
+      block.innerHTML = `<div style="padding: 1rem; border: 1px solid #444; border-radius: 8px; background: #1e1e1e;">
+  <label style="display:block; margin-bottom:0.8rem; font-weight:600; font-size:1.1rem; color:#f5f5f5;">
+    🔒 This content is password-protected:
+  </label>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <input type="password" id="decrypt-password" placeholder="Enter password"
+           style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1rem; background: #2a2a2a; color: #eee; border: 1px solid #555; border-radius: 4px;">
+    <button id="decrypt-button"
+            style="padding: 0.6rem 1rem; background: #2d2d2d; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+      Decrypt
+    </button>
+    <div style="display: flex; align-items: center;">
+      <input type="checkbox" id="show-pw" style="margin-left: 0.4rem; cursor: pointer;">
+      <label for="show-pw" title="Show password" style="margin-left: 0.4rem; font-size: 1.2rem; cursor: pointer;">👁️</label>
+    </div>
+  </div>
+  <div id="decrypt-error" style="color: #ff6b6b; margin-top: 0.75rem;"></div>
+</div>
+`;
+      var input = block.querySelector('input[type="password"]');
+      var button = block.querySelector('button');
+      var error = block.querySelector('#decrypt-error');
+      var showPw = block.querySelector('#show-pw');
+      showPw.onchange = function () {
+        input.type = this.checked ? 'text' : 'password';
+      };
+      button.onclick = function () {
+        var password = input.value;
+        var ciphertext_b64 = block.getAttribute('data-encrypted');
+        try {
+          var ciphertext = CryptoJS.enc.Base64.parse(ciphertext_b64);
+          var iv = CryptoJS.lib.WordArray.create(ciphertext.words.slice(0, 4), 16);
+          var actualCiphertext = CryptoJS.lib.WordArray.create(ciphertext.words.slice(4), ciphertext.sigBytes - 16);
+          var key = CryptoJS.SHA256(password);
+          var bytes = CryptoJS.AES.decrypt({ ciphertext: actualCiphertext }, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+          if (!plaintext) throw new Error('Incorrect password or corrupt data');
+
+          plaintext = plaintext.replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
+            const src = p1.match(/^\//) ? p1 : '/assets/images/' + p1;
+            return `![](${src})`;
+          });
+          plaintext = plaintext.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+            const href = '/' + p1.trim().replace(/\s+/g, '-').toLowerCase();
+            return `[${p1}](${href})`;
+          });
+          plaintext = plaintext.replace(/!\[\]\((data:image\/[^)]+)\)/g, (match, dataUri) => {
+            return `<img src="${dataUri}" style="max-width:100%; border-radius:8px; margin:1rem 0;">`;
+          });
+
+          if (window.marked) {
+            block.innerHTML = '<div class="post-content">' + marked.parse(plaintext) + '</div>';
+          } else {
+            block.innerHTML = '<pre>' + plaintext + '</pre>';
+            return;
+          }
+          
+          mediumZoom('img:not(.no-zoom)', {
+          margin: 24,
+          background: 'rgba(0, 0, 0, 0.9)',
+          scrollOffset: 40,
+          });
+
+          // ▼▼▼ Inject TOC based on headings ▼▼▼
+          const tocContainer = document.createElement('nav');
+          tocContainer.className = 'toc';
+          const headers = block.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+          if (headers.length > 0) {
+            const tocList = document.createElement('ul');
+            headers.forEach(h => {
+              if (!h.id) {
+                h.id = h.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+              }
+              const li = document.createElement('li');
+              li.style.marginLeft = h.tagName === 'H3' ? '1.2em' : h.tagName === 'H2' ? '0.6em' : '0';
+              const a = document.createElement('a');
+              a.href = '#' + h.id;
+              a.textContent = h.textContent;
+              li.appendChild(a);
+              tocList.appendChild(li);
+            });
+            tocContainer.innerHTML = `<strong style="display:block;margin-bottom:0.5em;">▼ Table of Contents</strong>`;
+            tocContainer.appendChild(tocList);
+            block.prepend(tocContainer);
+          }
+          // ▲▲▲ TOC Injection End ▲▲▲
+
+        } catch (e) {
+          let msg = e.message?.match(/utf-?8/i) ? 'Decryption failed' : '❌ ' + (e.message || 'Incorrect password or corrupt data');
+          error.textContent = msg;
+          error.style.display = 'block';
+        }
+      };
+    }
+
+    document.querySelectorAll('.encrypted-content').forEach(showDecryptionUI);
+  });
+</script>
+
+<!-- Share page -->
+<br>
+<div class="robots-nocontent social-share-buttons">
+  <b>Share this content</b>
+  <br>
+  <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+    <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+    <a class="a2a_button_x"></a>
+    <a class="a2a_button_linkedin"></a>
+    <a class="a2a_button_telegram"></a>
+    <a class="a2a_button_mastodon"></a>
+    <a class="a2a_button_email"></a>
+    <a class="a2a_button_microsoft_teams"></a>
+    <a class="a2a_button_threads"></a>
+    <a class="a2a_button_bluesky"></a>
+    <a class="a2a_button_whatsapp"></a>
+  </div>
+  <br>
+  <script async src="https://static.addtoany.com/menu/page.js"></script>
+</div>
+
+
+  <!-- End Page End inject -->
+</article>
+
+  </main>
+  <!-- Footer -->
+<footer class="mx-auto flex lg:mt-5 max-w-3xl flex-wrap items-center px-4 py-3 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+  <a href="https://creativecommons.org/licenses/by-sa/4.0/deed">© <time datetime="2017">2017</time> - <time datetime="2025">2025</time></a>
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <span class="mr-6 lg:ml-6">
+      <a class="link" href="https://www.getzola.org/" target="_blank">Powered by Zola</a>
+    </span>
+    <a class="link" href="https://www.getzola.org/themes/linkita/" target="_blank">&#9998; Linkita</a>
+  </div>
+  <!-- Begin Footer inject -->
+  
+  <!-- End Footer inject -->
+</footer>
+
+  
+
+  <!-- Begin Body End inject -->
+  
+  <!-- End Body End inject -->
+</body>
+
+</html>

